@@ -1,0 +1,31 @@
+services:
+  - type: web
+    name: Ewaste-backend
+    env: python
+    plan: free
+    buildCommand: bash ./build.sh
+    startCommand: gunicorn backend.wsgi:application
+    autoDeploy: true
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.8
+      - key: DJANGO_ENV
+        value: production
+      - key: DJANGO_DEBUG
+        value: "false"
+      - key: DJANGO_ALLOWED_HOSTS
+        sync: false
+      - key: FRONTEND_ORIGIN
+        sync: false
+      - key: FRONTEND_ORIGINS
+        sync: false
+      - key: DJANGO_CSRF_TRUSTED_ORIGINS
+        sync: false
+      - key: DJANGO_SESSION_COOKIE_SAMESITE
+        sync: false
+      - key: DJANGO_CSRF_COOKIE_SAMESITE
+        sync: false
+      - key: DJANGO_SECRET_KEY
+        generateValue: true
+      - key: DATABASE_URL
+        sync: false

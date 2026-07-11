@@ -1,0 +1,205 @@
+Smart E-Waste Collection System - Project Details
+=================================================
+
+1) Overview
+-----------
+This project is a full-stack web application for managing e-waste pickup requests.
+It supports role-based workflows for:
+- Users: create and track pickup requests.
+- Admins: manage requests, assign collectors, register collector accounts, view stats, export monthly PDF reports.
+- Collectors: view assigned requests and update completion status.
+
+Stack:
+- Backend: Django (session-based auth, JSON APIs).
+- Frontend: React + Vite.
+- Database: configurable (SQLite default, PostgreSQL via env).
+
+
+2) Repository Structure
+-----------------------
+Root (backend workspace):
+- manage.py
+- backend/                 Django project config
+- ewaste/                 Main Django app (models, views, urls, admin, tests)
+- frontend/               React frontend
+- requirements.txt
+- db.sqlite3              Local SQLite DB (dev)
+
+Backend key files:
+- backend/settings.py
+- backend/urls.py
+- ewaste/models.py
+- ewaste/views.py
+- ewaste/urls.py
+- ewaste/admin.py
+- ewaste/tests.py
+- ewaste/middleware.py
+
+Frontend key files:
+- frontend/src/App.jsx
+- frontend/src/api.js
+- frontend/src/pages/AdminDashboard.jsx
+- frontend/src/pages/AuthPage.jsx
+- frontend/src/pages/UserDashboard.jsx
+- frontend/src/pages/CollectorDashboard.jsx
+- frontend/src/pages/UserProfilePage.jsx
+
+
+3) Domain Model
+---------------
+UserProfile (ewaste/models.py):
+- OneToOne with Django User.
+- Fields: role, phone, address.
+- Roles: user, admin, collector.
+
+EWasteRequest (ewaste/models.py):
+- Fields: item_type, quantity, condition, brand, pickup_address, pickup_date, notes.
+- Lifecycle status: pending, assigned, completed, cancelled.
+- assigned_collector -> Django User (must have collector role).
+- assigned_at, completed_at, created_at, updated_at.
+- Model-level validation enforces role and status/collector consistency.
+
+Signals:
+- ewaste/signals.py auto-creates UserProfile for each created User.
+
+
+4) Authentication and Authorization
+-----------------------------------
+Auth model:
+- Django session authentication with cookies.
+- Frontend uses fetch with credentials included.
+
+Role authorization:
+- Backend checks role in endpoints using UserProfile role.
+- Admin-only operations: list collectors, register collectors, assign collector, dashboard stats, report export.
+- Collector-only constraints: can act on assigned requests only.
+- User-only constraints: can create own requests and edit pending own requests.
+
+CSRF:
+- CSRF protection enabled by middleware.
+- Frontend automatically fetches CSRF cookie endpoint (/api/auth/csrf/) for unsafe methods.
+- Frontend sends X-CSRFToken header on POST/PATCH/etc.
+
+
+5) API Endpoints
+----------------
+Base path: /api/
+
+Auth:
+- POST /auth/register/
+- GET  /auth/csrf/
+- POST /auth/login/
+- POST /auth/forgot-password/
+- POST /auth/logout/
+
+User/Profile:
+- GET  /me/
+- GET  /profile/
+- PATCH /profile/
+
+Requests:
+- GET  /requests/
+- POST /requests/
+- GET  /requests/<id>/
+- PATCH /requests/<id>/
+- POST /requests/<id>/assign/
+- POST /requests/<id>/status/
+
+Admin Data:
+- GET  /collectors/
+- POST /collectors/register/
+- GET  /dashboard/stats/
+- GET  /reports/monthly-pdf/?month=YYYY-MM
+
+
+6) Frontend Behavior
+--------------------
+Main app:
+- Restores stored user from localStorage.
+- Verifies session with /api/me on startup.
+- Loads requests after authenticated startup.
+
+Admin dashboard:
+- Request management table (assign collector, complete status).
+- Collector registration feature:
+  - Shows "Collectors Registration" button.
+  - Displays form on click.
+  - Supports password show/hide toggle using same emoji style as other forms.
+  - Hides form and shows success message after successful registration.
+- Monthly PDF export.
+
+
+7) Security and Hardening Status
+--------------------------------
+Implemented:
+- Removed CSRF exemptions from app mutation endpoints.
+- Added CSRF bootstrap endpoint and frontend CSRF header support.
+- Added numeric parsing validation for request quantity and collector_id.
+- Case-insensitive email uniqueness check in profile update.
+- Added basic cache-based throttling on register/login/forgot-password endpoints.
+- Removed static committed secret key fallback.
+- Added production guard:
+  - If DJANGO_ENV=production and DJANGO_SECRET_KEY missing -> startup fails.
+
+Pending high-risk item:
+- /api/auth/forgot-password/ still allows password reset with email + new_password only.
+  It needs a secure reset flow (token/OTP/email verification) for production safety.
+
+
+8) Configuration (Environment Variables)
+----------------------------------------
+Core:
+- DJANGO_DEBUG
+- DJANGO_SECRET_KEY
+- DJANGO_ENV (set to production in production)
+- DJANGO_ALLOWED_HOSTS
+
+Database:
+- DJANGO_DB_ENGINE
+- DJANGO_DB_NAME
+- DJANGO_DB_USER
+- DJANGO_DB_PASSWORD
+- DJANGO_DB_HOST
+- DJANGO_DB_PORT
+
+Frontend/CORS/CSRF:
+- FRONTEND_ORIGIN
+- FRONTEND_ORIGINS
+- DJANGO_CSRF_TRUSTED_ORIGINS
+
+Security:
+- DJANGO_SECURE_SSL_REDIRECT
+- DJANGO_SECURE_HSTS_SECONDS
+- DJANGO_SECURE_HSTS_INCLUDE_SUBDOMAINS
+- DJANGO_SECURE_HSTS_PRELOAD
+- DJANGO_SESSION_COOKIE_SAMESITE
+- DJANGO_CSRF_COOKIE_SAMESITE
+
+
+9) Local Development Commands
+-----------------------------
+Backend:
+- python manage.py check
+- python manage.py runserver
+- python manage.py test ewaste
+- python manage.py check --deploy
+
+Frontend:
+- npm --prefix frontend run dev
+- npm --prefix frontend run build
+- npm --prefix frontend run check
+- npm --prefix frontend run test
+
+
+10) Test/Build Snapshot
+-----------------------
+Current verification status:
+- Django checks: pass
+- Django tests (ewaste): pass
+- Frontend production build: pass
+
+
+11) Notes
+---------
+- The file name "deteil.txt" follows the requested spelling.
+- For production readiness, prioritize replacing the current forgot-password logic with a verified reset-token flow.

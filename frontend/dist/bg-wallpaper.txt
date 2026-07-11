@@ -1,0 +1,6 @@
+Place your wallpaper image here and name it:
+
+bg-wallpaper.jpg
+
+Used by:
+frontend/src/styles.css
