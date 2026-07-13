@@ -56,15 +56,19 @@ export default function AuthPage({ onLogin, onBack }) {
     <div className="auth-page">
       <button className="auth-home" type="button" onClick={onBack}><BrandMark /></button>
       <section className="auth-showcase">
-        <div className="auth-art"><img src="/eco-hero.png" alt="Sustainable e-waste collection ecosystem" /></div>
-        <div className="auth-float auth-leaf-one">◆</div><div className="auth-float auth-leaf-two">●</div><div className="auth-float auth-recycle">♻</div>
-        <div className="auth-showcase-copy"><span className="auth-pill">♻ SMARTER RECYCLING</span><h1>Every device has<br />a <em>next chapter.</em></h1><p>Join a growing community making electronics disposal safe, transparent, and impactful.</p><div className="auth-proof"><div className="avatar-stack"><span>A</span><span>K</span><span>J</span></div><div><strong>2,000+ members</strong><small>already recycling smarter</small></div></div></div>
+        <div className="auth-art"><img src="/eco-hero.png" alt="" aria-hidden="true" /></div>
+        <div className="auth-showcase-copy"><span className="auth-pill"><span aria-hidden="true">♻</span> Smarter recycling</span><h1>Every device has<br /><em>a next chapter.</em></h1><p>Join a growing community making electronics disposal safe, transparent, and impactful.</p><div className="auth-proof"><div className="avatar-stack"><span>A</span><span>K</span><span>J</span></div><div><strong>2,000+ members</strong><small>already recycling smarter</small></div></div></div>
         <div className="auth-glow" />
       </section>
 
       <section className="auth-panel">
         <div className="auth-panel-inner">
           <button className="back-link" type="button" onClick={onBack}>← Back to home</button>
+          <div className="auth-mobile-story">
+            <span className="auth-pill"><span aria-hidden="true">♻</span> Smarter recycling</span>
+            <h1>Every device has <em>a next chapter.</em></h1>
+            <p>Sustainable e-waste collection made safe, transparent, and simple.</p>
+          </div>
           {!showResetPassword ? (
             <>
               <div className="auth-heading"><span className="auth-mini-logo"><BrandMark compact /></span><h2>{mode === "login" ? "Welcome back" : "Create your account"}</h2><p>{mode === "login" ? "Enter your details to access your dashboard." : "Start your journey toward responsible recycling."}</p></div>
