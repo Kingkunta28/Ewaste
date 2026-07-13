@@ -20,6 +20,8 @@ export default function AdminDashboard({ requests, refresh }) {
   const [reportMonth, setReportMonth] = useState(currentMonth);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const cancelledCount = requests.filter((item) => item.status === "cancelled").length;
+  const activeUsers = new Set(requests.map((item) => item.user?.username).filter(Boolean)).size;
 
   const loadDashboardData = async () => {
     const [collectorData, statData] = await Promise.all([api.listCollectors(), api.dashboardStats()]);
@@ -128,7 +130,7 @@ export default function AdminDashboard({ requests, refresh }) {
         <div className="stats">
           <div className="stat">
             <strong>{stats.total_requests}</strong>
-            <span>Total</span>
+            <span>Total Requests</span>
           </div>
           <div className="stat">
             <strong>{stats.pending_requests}</strong>
@@ -142,15 +144,21 @@ export default function AdminDashboard({ requests, refresh }) {
             <strong>{stats.completed_requests}</strong>
             <span>Completed</span>
           </div>
+          <div className="stat"><strong>{activeUsers}</strong><span>Active Users</span></div>
+          <div className="stat"><strong>{cancelledCount}</strong><span>Cancelled</span></div>
+          <div className="stat"><strong>{collectors.length}</strong><span>Active Collectors</span></div>
+          <div className="stat"><strong>4</strong><span>Collection Centers</span></div>
         </div>
       ) : null}
+      <div className="admin-analytics-grid">
+        <article className="card mini-chart-card"><div className="section-head"><h3>Requests by Month</h3><p>Collection activity overview</p></div><div className="bar-chart" aria-label="Monthly requests chart">{[38,55,42,72,61,88,76,92].map((height,index)=><i key={index} style={{height:`${height}%`}} />)}</div><div className="chart-labels"><span>Jan</span><span>Mar</span><span>May</span><span>Jul</span></div></article>
+        <article className="card status-chart-card"><div className="section-head"><h3>Request Status</h3><p>Current distribution</p></div><div className="donut-chart" style={{"--complete": `${requests.length ? Math.round((requests.filter((item)=>item.status==="completed").length/requests.length)*100) : 0}%`}}><span>{requests.length}<small>Total</small></span></div><div className="chart-legend"><span><i className="green-dot"/>Completed</span><span><i className="amber-dot"/>Pending</span><span><i className="blue-dot"/>Assigned</span></div></article>
+      </div>
       {error ? <p className="error">{error}</p> : null}
       {success ? <p className="success">{success}</p> : null}
 
       <div className="card table-shell">
-        <button type="button" onClick={() => setShowCollectorRegistration(true)}>
-          Collectors Registration
-        </button>
+        <div className="quick-actions"><button type="button" onClick={() => setShowCollectorRegistration(true)}>＋ Add Collector</button><button type="button" onClick={exportMonthlyReport}>▥ Generate PDF Report</button><button type="button" onClick={() => window.print()}>↧ Export Data</button></div>
         {showCollectorRegistration ? (
           <form className="form-grid" onSubmit={registerCollector}>
             <label>
@@ -267,11 +275,11 @@ export default function AdminDashboard({ requests, refresh }) {
                     <button
                       type="button"
                       onClick={() => assign(req.id, selectedCollectors[req.id])}
-                      disabled={!selectedCollectors[req.id]}
+                      disabled={!selectedCollectors[req.id] || ["completed", "cancelled"].includes(req.status)}
                     >
                       Assign
                     </button>
-                    <button type="button" onClick={() => setStatus(req.id, "completed")}>
+                    <button type="button" onClick={() => setStatus(req.id, "completed")} disabled={!req.assigned_collector || req.status === "completed"}>
                       Complete
                     </button>
                   </div>

@@ -7,6 +7,7 @@ export default function UserDashboard({ requests, refresh }) {
   const [form, setForm] = useState(initialRequestForm);
   const [customBrand, setCustomBrand] = useState("");
   const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
   const [saving, setSaving] = useState(false);
   const pendingCount = requests.filter((item) => item.status === "pending").length;
   const assignedCount = requests.filter((item) => item.status === "assigned").length;
@@ -29,6 +30,7 @@ export default function UserDashboard({ requests, refresh }) {
   const submit = async (event) => {
     event.preventDefault();
     setError("");
+    setSuccess("");
     setSaving(true);
     try {
       const brandToSubmit = form.brand === "Other" ? customBrand.trim() : form.brand;
@@ -36,6 +38,7 @@ export default function UserDashboard({ requests, refresh }) {
       setForm(initialRequestForm);
       setCustomBrand("");
       await refresh();
+      setSuccess("Pickup request submitted successfully.");
     } catch (err) {
       setError(err.message);
     } finally {
@@ -53,22 +56,39 @@ export default function UserDashboard({ requests, refresh }) {
         </div>
         <div className="user-stats">
           <article className="user-stat-box">
+            <span className="stat-icon green">▤</span>
             <strong>{requests.length}</strong>
             <span>Total Requests</span>
+            <small>All time</small>
           </article>
           <article className="user-stat-box">
+            <span className="stat-icon amber">◷</span>
             <strong>{pendingCount}</strong>
             <span>Pending</span>
+            <small>Awaiting review</small>
           </article>
           <article className="user-stat-box">
+            <span className="stat-icon blue">⌁</span>
             <strong>{assignedCount}</strong>
             <span>Assigned</span>
+            <small>Collector ready</small>
           </article>
           <article className="user-stat-box">
+            <span className="stat-icon lime">✓</span>
             <strong>{completedCount}</strong>
             <span>Completed</span>
+            <small>Safely recycled</small>
           </article>
         </div>
+      </div>
+
+      <div className="dashboard-insights">
+        <article className="card eco-impact-widget">
+          <div className="widget-head"><div><span className="section-kicker">ENVIRONMENTAL IMPACT</span><h3>Your positive footprint</h3></div><span className="widget-icon">♧</span></div>
+          <div className="impact-widget-stats"><div><strong>{(completedCount * 3.4).toFixed(1)} kg</strong><span>E-waste diverted</span></div><div><strong>{(completedCount * 2.1).toFixed(1)} kg</strong><span>CO₂ avoided</span></div><div><strong>{completedCount * 14}</strong><span>Impact points</span></div></div>
+          <div className="goal-row"><span>Monthly green goal</span><strong>{Math.min(completedCount * 20, 100)}%</strong></div><div className="goal-bar"><i style={{ width: `${Math.min(completedCount * 20, 100)}%` }} /></div>
+        </article>
+        <article className="card recycling-tip"><span className="tip-art">♻</span><span className="section-kicker">QUICK TIP</span><h3>Protect your data first</h3><p>Back up your files and sign out of all accounts before handing over a phone or computer.</p><a href="#tips">Explore recycling tips →</a></article>
       </div>
 
       <form className="card user-form-card" onSubmit={submit}>
@@ -122,7 +142,7 @@ export default function UserDashboard({ requests, refresh }) {
           )}
           <label>
             Pickup Date
-            <input type="date" value={form.pickup_date} onChange={(e) => onChange("pickup_date", e.target.value)} required />
+            <input type="date" min={new Date().toISOString().slice(0, 10)} value={form.pickup_date} onChange={(e) => onChange("pickup_date", e.target.value)} required />
           </label>
           <label>
             Address
@@ -134,6 +154,7 @@ export default function UserDashboard({ requests, refresh }) {
           <textarea value={form.notes} onChange={(e) => onChange("notes", e.target.value)} />
         </label>
         {error ? <p className="error">{error}</p> : null}
+        {success ? <p className="success">{success}</p> : null}
         <button disabled={saving} type="submit">
           {saving ? "Submitting..." : "Submit Pickup Request"}
         </button>

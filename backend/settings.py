@@ -51,7 +51,10 @@ if not SECRET_KEY:
         RuntimeWarning,
     )
 
-ALLOWED_HOSTS = _env_list("DJANGO_ALLOWED_HOSTS", "sewsystem-backend.onrender.com")
+ALLOWED_HOSTS = _env_list(
+    "DJANGO_ALLOWED_HOSTS",
+    "127.0.0.1,localhost,sewsystem-backend.onrender.com",
+)
 
 # Application definition
 

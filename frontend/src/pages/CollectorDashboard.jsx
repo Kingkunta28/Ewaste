@@ -6,6 +6,9 @@ export default function CollectorDashboard({ requests, refresh }) {
   const [error, setError] = useState("");
   const [mapAddress, setMapAddress] = useState("");
   const completedCount = requests.filter((item) => item.status === "completed").length;
+  const pendingCount = requests.filter((item) => item.status === "pending" || item.status === "assigned").length;
+  const today = new Date().toISOString().slice(0, 10);
+  const todayCount = requests.filter((item) => item.pickup_date === today).length;
   const visibleRequests = useMemo(
     () =>
       requests
@@ -52,17 +55,18 @@ export default function CollectorDashboard({ requests, refresh }) {
           <p>View your assigned pickups, complete collections, and keep the request queue moving.</p>
         </div>
         <div className="collector-mini-stats">
-          <article>
-            <strong>{requests.length}</strong>
-            <span>Assigned</span>
-          </article>
-          <article>
-            <strong>{completedCount}</strong>
-            <span>Completed</span>
-          </article>
+          <article><strong>{todayCount}</strong><span>Today's Tasks</span></article>
+          <article><strong>{pendingCount}</strong><span>Pending Tasks</span></article>
+          <article><strong>{completedCount}</strong><span>Completed Tasks</span></article>
+          <article><strong>{requests.length}</strong><span>Total Collections</span></article>
         </div>
       </div>
       {error ? <p className="error">{error}</p> : null}
+      <div className="collector-performance">
+        <article className="card"><span>Daily progress</span><strong>{todayCount}/{Math.max(todayCount, 4)}</strong><div><i style={{width:`${Math.min((todayCount/Math.max(todayCount,4))*100,100)}%`}} /></div></article>
+        <article className="card"><span>Weekly collections</span><strong>{completedCount}</strong><small>Safe pickups completed</small></article>
+        <article className="card"><span>Monthly performance</span><strong>{requests.length ? Math.round((completedCount/requests.length)*100) : 0}%</strong><small>Completion rate</small></article>
+      </div>
       <div className="card">
         <div className="section-head">
           <h3>Assigned Pickups</h3>

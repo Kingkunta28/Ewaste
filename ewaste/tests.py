@@ -4,7 +4,7 @@ from datetime import date, timedelta
 from django.contrib.auth.models import User
 from django.test import Client, TestCase
 
-from .models import UserProfile
+from .models import EWasteRequest, UserProfile
 
 
 class AuthAndRequestTests(TestCase):
@@ -34,6 +34,7 @@ class AuthAndRequestTests(TestCase):
             content_type="application/json",
         )
         self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()["user"]["first_name"], "Student")
 
         pickup_date = (date.today() + timedelta(days=1)).isoformat()
         response = self.client.post(
@@ -125,3 +126,81 @@ class AuthAndRequestTests(TestCase):
             content_type="application/json",
         )
         self.assertEqual(response.status_code, 403)
+
+    def test_profile_fields_can_be_cleared(self):
+        user = User.objects.create_user(
+            username="profile@example.com",
+            email="profile@example.com",
+            password="StrongPass123!",
+            first_name="Profile",
+            last_name="User",
+        )
+        user.profile.phone = "12345"
+        user.profile.address = "Old address"
+        user.profile.save()
+        self.client.post(
+            "/api/auth/login/",
+            data=json.dumps({"email": user.email, "password": "StrongPass123!"}),
+            content_type="application/json",
+        )
+
+        response = self.client.patch(
+            "/api/profile/",
+            data=json.dumps({"phone": "", "address": ""}),
+            content_type="application/json",
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()["user"]["phone"], "")
+        self.assertEqual(response.json()["user"]["address"], "")
+
+    def test_request_notes_can_be_cleared(self):
+        user = User.objects.create_user(username="owner", password="StrongPass123!")
+        request_row = EWasteRequest.objects.create(
+            user=user,
+            item_type="Laptop",
+            quantity=1,
+            pickup_address="Stone Town",
+            pickup_date=date.today() + timedelta(days=1),
+            notes="Call first",
+        )
+        self.client.post(
+            "/api/auth/login/",
+            data=json.dumps({"username": "owner", "password": "StrongPass123!"}),
+            content_type="application/json",
+        )
+
+        response = self.client.patch(
+            f"/api/requests/{request_row.id}/",
+            data=json.dumps({"notes": ""}),
+            content_type="application/json",
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()["notes"], "")
+
+    def test_request_must_be_assigned_before_completion(self):
+        owner = User.objects.create_user(username="owner2", password="StrongPass123!")
+        request_row = EWasteRequest.objects.create(
+            user=owner,
+            item_type="Printer",
+            pickup_address="Mwanakwerekwe",
+            pickup_date=date.today() + timedelta(days=1),
+        )
+        admin_user = User.objects.create_user(username="admin3", password="StrongPass123!")
+        admin_user.profile.role = UserProfile.ROLE_ADMIN
+        admin_user.profile.save()
+        self.client.post(
+            "/api/auth/login/",
+            data=json.dumps({"username": "admin3", "password": "StrongPass123!"}),
+            content_type="application/json",
+        )
+
+        response = self.client.post(
+            f"/api/requests/{request_row.id}/status/",
+            data=json.dumps({"status": "completed"}),
+            content_type="application/json",
+        )
+
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("Assign a collector", response.json()["error"])

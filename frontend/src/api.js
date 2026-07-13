@@ -1,4 +1,6 @@
-const defaultApiBase = import.meta.env.DEV ? "http://127.0.0.1:8000/api" : "/api";
+// In development Vite proxies /api to Django. Keeping browser requests same-origin
+// makes session and CSRF cookies reliable on both localhost and 127.0.0.1.
+const defaultApiBase = "/api";
 const configuredApiBase = import.meta.env.VITE_API_BASE_URL || defaultApiBase;
 const API_BASE = configuredApiBase.replace(/\/+$/, "");
 let csrfInitPromise = null;
@@ -16,6 +18,13 @@ async function ensureCsrfCookie() {
     csrfInitPromise = fetch(`${API_BASE}/auth/csrf/`, {
       method: "GET",
       credentials: "include"
+    }).then((response) => {
+      if (!response.ok) {
+        const error = new Error("Could not initialize a secure session. Is the backend running?");
+        error.status = response.status;
+        throw error;
+      }
+      return response;
     }).finally(() => {
       csrfInitPromise = null;
     });
@@ -32,13 +41,13 @@ async function call(path, options = {}) {
   const csrfToken = unsafeMethod ? getCookie("csrftoken") : "";
 
   const response = await fetch(`${API_BASE}${path}`, {
+    ...options,
     headers: {
       "Content-Type": "application/json",
       ...(csrfToken ? { "X-CSRFToken": csrfToken } : {}),
       ...(options.headers || {})
     },
-    credentials: "include",
-    ...options
+    credentials: "include"
   });
 
   const contentType = response.headers.get("content-type") || "";
@@ -47,7 +56,7 @@ async function call(path, options = {}) {
     : null;
 
   if (!response.ok) {
-    const message = data?.error || "Request failed";
+    const message = data?.error || `Request failed (${response.status})`;
     const error = new Error(message);
     error.status = response.status;
     throw error;

@@ -105,6 +105,20 @@ def _role(user):
     return _profile_for(user).role
 
 
+def _serialize_user(user):
+    profile = _profile_for(user)
+    return {
+        "id": user.id,
+        "username": user.username,
+        "email": user.email,
+        "first_name": user.first_name,
+        "last_name": user.last_name,
+        "phone": profile.phone,
+        "address": profile.address,
+        "role": _role(user),
+    }
+
+
 def _require_auth(request):
     if not request.user.is_authenticated:
         return _error("Authentication required", 401)
@@ -154,12 +168,7 @@ def register_view(request):
     return JsonResponse(
         {
             "message": "Account created",
-            "user": {
-                "id": user.id,
-                "username": user.username,
-                "email": user.email,
-                "role": profile.role,
-            },
+            "user": _serialize_user(user),
         },
         status=201,
     )
@@ -198,12 +207,7 @@ def login_view(request):
     return JsonResponse(
         {
             "message": "Logged in",
-            "user": {
-                "id": user.id,
-                "username": user.username,
-                "email": user.email,
-                "role": _role(user),
-            },
+            "user": _serialize_user(user),
         }
     )
 
@@ -253,19 +257,7 @@ def me_view(request):
     if auth_error:
         return auth_error
 
-    profile = _profile_for(request.user)
-    return JsonResponse(
-        {
-            "id": request.user.id,
-            "username": request.user.username,
-                "email": request.user.email,
-                "first_name": request.user.first_name,
-                "last_name": request.user.last_name,
-                "role": _role(request.user),
-                "phone": profile.phone,
-                "address": profile.address,
-            }
-        )
+    return JsonResponse(_serialize_user(request.user))
 
 
 @require_http_methods(["GET", "PATCH"])
@@ -276,18 +268,7 @@ def profile_view(request):
 
     profile = _profile_for(request.user)
     if request.method == "GET":
-        return JsonResponse(
-            {
-                "id": request.user.id,
-                "username": request.user.username,
-                "email": request.user.email,
-                "first_name": request.user.first_name,
-                "last_name": request.user.last_name,
-                "phone": profile.phone,
-                "address": profile.address,
-                "role": _role(request.user),
-            }
-        )
+        return JsonResponse(_serialize_user(request.user))
 
     data = _json_body(request)
     if data is None:
@@ -297,28 +278,23 @@ def profile_view(request):
     if User.objects.exclude(id=request.user.id).filter(email__iexact=email).exists():
         return _error("Email already exists")
 
-    request.user.first_name = (data.get("first_name") or request.user.first_name).strip()
-    request.user.last_name = (data.get("last_name") or request.user.last_name).strip()
+    if "first_name" in data:
+        request.user.first_name = (data.get("first_name") or "").strip()
+    if "last_name" in data:
+        request.user.last_name = (data.get("last_name") or "").strip()
     request.user.email = email
     request.user.save()
 
-    profile.phone = (data.get("phone") or profile.phone).strip()
-    profile.address = (data.get("address") or profile.address).strip()
+    if "phone" in data:
+        profile.phone = (data.get("phone") or "").strip()
+    if "address" in data:
+        profile.address = (data.get("address") or "").strip()
     profile.save()
 
     return JsonResponse(
         {
             "message": "Profile updated",
-            "user": {
-                "id": request.user.id,
-                "username": request.user.username,
-                "email": request.user.email,
-                "first_name": request.user.first_name,
-                "last_name": request.user.last_name,
-                "phone": profile.phone,
-                "address": profile.address,
-                "role": _role(request.user),
-            },
+            "user": _serialize_user(request.user),
         }
     )
 
@@ -408,11 +384,19 @@ def request_detail_view(request, request_id):
     if req.status != EWasteRequest.STATUS_PENDING:
         return _error("Only pending requests can be edited")
 
-    req.item_type = (data.get("item_type") or req.item_type).strip()
-    req.pickup_address = (data.get("pickup_address") or req.pickup_address).strip()
-    req.condition = (data.get("condition") or req.condition).strip()
-    req.brand = (data.get("brand") or req.brand).strip()
-    req.notes = (data.get("notes") or req.notes).strip()
+    if "item_type" in data:
+        req.item_type = (data.get("item_type") or "").strip()
+    if "pickup_address" in data:
+        req.pickup_address = (data.get("pickup_address") or "").strip()
+    if "condition" in data:
+        req.condition = (data.get("condition") or "").strip()
+    if "brand" in data:
+        req.brand = (data.get("brand") or "").strip()
+    if "notes" in data:
+        req.notes = (data.get("notes") or "").strip()
+
+    if not req.item_type or not req.pickup_address:
+        return _error("item_type and pickup_address cannot be empty")
 
     quantity = data.get("quantity")
     if quantity is not None:
@@ -472,6 +456,9 @@ def assign_request_view(request, request_id):
     if collector_profile.role != UserProfile.ROLE_COLLECTOR:
         return _error("Selected user is not a collector")
 
+    if req.status in {EWasteRequest.STATUS_COMPLETED, EWasteRequest.STATUS_CANCELLED}:
+        return _error("Completed or cancelled requests cannot be assigned")
+
     req.mark_assigned(collector)
     req.save()
     return JsonResponse(_serialize_request(req))
@@ -500,8 +487,14 @@ def update_status_view(request, request_id):
         return _error("Users cannot update request status", 403)
 
     if status == EWasteRequest.STATUS_COMPLETED:
+        if not req.assigned_collector_id:
+            return _error("Assign a collector before completing this request")
         req.mark_completed()
-    elif status in {EWasteRequest.STATUS_PENDING, EWasteRequest.STATUS_ASSIGNED, EWasteRequest.STATUS_CANCELLED}:
+    elif status == EWasteRequest.STATUS_ASSIGNED:
+        if not req.assigned_collector_id:
+            return _error("Assign a collector before using assigned status")
+        req.status = status
+    elif status in {EWasteRequest.STATUS_PENDING, EWasteRequest.STATUS_CANCELLED}:
         req.status = status
     else:
         return _error("Unsupported status")
