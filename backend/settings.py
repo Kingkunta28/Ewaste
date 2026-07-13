@@ -16,9 +16,11 @@ import warnings
 from pathlib import Path
 from django.core.management.utils import get_random_secret_key
 import dj_database_url
+from dotenv import load_dotenv
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+load_dotenv(BASE_DIR / ".env")
 
 
 def _env_list(name, default):
@@ -53,7 +55,7 @@ if not SECRET_KEY:
 
 ALLOWED_HOSTS = _env_list(
     "DJANGO_ALLOWED_HOSTS",
-    "127.0.0.1,localhost,sewsystem-backend.onrender.com",
+    "127.0.0.1,localhost,ewaste-backend-rjky.onrender.com",
 )
 
 # Application definition
@@ -105,10 +107,17 @@ WSGI_APPLICATION = "backend.wsgi.application"
 
 DATABASE_ENGINE = os.environ.get("DJANGO_DB_ENGINE", "django.db.backends.sqlite3")
 DATABASE_URL = os.environ.get("DATABASE_URL", "").strip()
+if "migrate" in sys.argv and os.environ.get("MIGRATION_DATABASE_URL", "").strip():
+    DATABASE_URL = os.environ["MIGRATION_DATABASE_URL"].strip()
 if DATABASE_URL:
-    DATABASES = {
-        "default": dj_database_url.parse(DATABASE_URL, conn_max_age=600, ssl_require=IS_PRODUCTION),
-    }
+    database_config = dj_database_url.parse(
+        DATABASE_URL,
+        conn_max_age=600,
+        ssl_require=IS_PRODUCTION,
+    )
+    if "-pooler." in (database_config.get("HOST") or ""):
+        database_config["DISABLE_SERVER_SIDE_CURSORS"] = True
+    DATABASES = {"default": database_config}
 elif DATABASE_ENGINE == "django.db.backends.sqlite3":
     DATABASES = {
         "default": {

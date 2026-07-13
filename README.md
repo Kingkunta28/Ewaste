@@ -50,14 +50,14 @@ Frontend URL: `http://127.0.0.1:5173`
    - A Django web service
    - A PostgreSQL database
 4. In the backend service env vars, set these with your final Vercel domain:
-   - `DJANGO_ALLOWED_HOSTS=your-render-backend.onrender.com`
+   - `DJANGO_ALLOWED_HOSTS=ewaste-backend-rjky.onrender.com`
    - `FRONTEND_ORIGIN=https://your-frontend.vercel.app`
    - `FRONTEND_ORIGINS=https://your-frontend.vercel.app`
    - `DJANGO_CSRF_TRUSTED_ORIGINS=https://your-frontend.vercel.app`
    - `DJANGO_SUPERUSER_EMAIL=Raya@gmail.com`
    - `DJANGO_SUPERUSER_USERNAME=Raya@gmail.com`
    - `DJANGO_SUPERUSER_PASSWORD=Raya@1234`
-5. After first deploy, copy backend URL (example: `https://sewsystem-backend.onrender.com`).
+5. Backend URL: `https://ewaste-backend-rjky.onrender.com`.
 6. On each deploy, `build.sh` will automatically create/update this superuser.
 
 ### 2) Deploy frontend to Vercel
@@ -67,7 +67,7 @@ Frontend URL: `http://127.0.0.1:5173`
    - Root Directory: `frontend`
    - Framework Preset: `Vite`
 3. API routing on Vercel is already configured in `frontend/vercel.json`:
-   - `/api/*` -> `https://sewsystem-backend.onrender.com/api/*`
+   - `/api/*` -> `https://ewaste-backend-rjky.onrender.com/api/*`
    - You can optionally override with `VITE_API_BASE_URL` if needed.
 4. Deploy.
 

@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
+  "engines": {
+    "node": "22.x"
+  },
   "scripts": {
     "dev": "vite",
     "build": "vite build",
@@ -11,11 +14,9 @@
     "test": "npm run build"
   },
   "dependencies": {
+    "@vitejs/plugin-react": "4.7.0",
     "react": "^18.3.1",
-    "react-dom": "^18.3.1"
-  },
-  "devDependencies": {
-    "@vitejs/plugin-react": "^4.3.1",
-    "vite": "^5.4.10"
+    "react-dom": "^18.3.1",
+    "vite": "5.4.21"
   }
 }
