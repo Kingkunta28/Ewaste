@@ -1,205 +1,814 @@
-Smart E-Waste Collection System - Project Details
-=================================================
+SMART E-WASTE COLLECTION SYSTEM
+Verified Project Details and Technical Handover
+================================================
 
-1) Overview
------------
-This project is a full-stack web application for managing e-waste pickup requests.
-It supports role-based workflows for:
-- Users: create and track pickup requests.
-- Admins: manage requests, assign collectors, register collector accounts, view stats, export monthly PDF reports.
-- Collectors: view assigned requests and update completion status.
-
-Stack:
-- Backend: Django (session-based auth, JSON APIs).
-- Frontend: React + Vite.
-- Database: configurable (SQLite default, PostgreSQL via env).
+Document status: Updated from a full source-code audit
+Audit date: 14 July 2026
+Repository: https://github.com/Kingkunta28/Ewaste
+Frontend: https://ewaste-lemon.vercel.app
+Backend: https://ewaste-backend-rjky.onrender.com
 
 
-2) Repository Structure
+1. PROJECT SUMMARY
+------------------
+
+The Smart E-Waste Collection System is a role-based web application for
+coordinating electronic-waste pickup requests. Residents submit pickup
+requests, administrators assign collectors and monitor operations, and
+collectors complete assigned pickups.
+
+The system is a single repository containing:
+
+- A Django JSON API and Django administration site.
+- A React single-page application built with Vite.
+- PostgreSQL support for production through Neon.
+- SQLite fallback for local development and isolated tests.
+- A professional monthly PDF performance report generated with ReportLab.
+- Render deployment configuration for the backend.
+- Vercel deployment configuration for the frontend.
+
+The application currently supports three roles:
+
+- User: registers, signs in, maintains a profile, creates pickup requests,
+  and tracks request status.
+- Admin: views users and collectors, registers collectors, assigns requests,
+  changes request status, views dashboard statistics, and exports reports.
+- Collector: views only requests assigned to their account, opens pickup
+  addresses in an embedded map, and marks collections as completed.
+
+
+2. VERIFIED TECHNOLOGY STACK
+----------------------------
+
+Backend:
+
+- Python 3.12.8 on Render.
+- Django 5.1 or newer, below Django 7.0.
+- Django session authentication.
+- ReportLab 4+ for PDF generation.
+- Gunicorn application server.
+- WhiteNoise for Django static assets.
+- dj-database-url for DATABASE_URL parsing.
+- psycopg 3 for PostgreSQL.
+- python-dotenv for local environment loading.
+
+Frontend:
+
+- React 18.3.1.
+- React DOM 18.3.1.
+- Vite 5.4.21.
+- @vitejs/plugin-react 4.7.0.
+- Plain CSS with Inter body typography and Poppins display typography.
+- Hash-based workspace navigation; no React Router dependency.
+
+Infrastructure:
+
+- GitHub source repository.
+- Render backend at ewaste-backend-rjky.onrender.com.
+- Vercel frontend at ewaste-lemon.vercel.app.
+- Neon PostgreSQL in production.
+- Vercel rewrites /api/* to the Render backend.
+
+
+3. REPOSITORY STRUCTURE
 -----------------------
-Root (backend workspace):
-- manage.py
-- backend/                 Django project config
-- ewaste/                 Main Django app (models, views, urls, admin, tests)
-- frontend/               React frontend
-- requirements.txt
-- db.sqlite3              Local SQLite DB (dev)
 
-Backend key files:
-- backend/settings.py
-- backend/urls.py
-- ewaste/models.py
-- ewaste/views.py
-- ewaste/urls.py
-- ewaste/admin.py
-- ewaste/tests.py
-- ewaste/middleware.py
+Root:
 
-Frontend key files:
-- frontend/src/App.jsx
-- frontend/src/api.js
-- frontend/src/pages/AdminDashboard.jsx
-- frontend/src/pages/AuthPage.jsx
-- frontend/src/pages/UserDashboard.jsx
-- frontend/src/pages/CollectorDashboard.jsx
-- frontend/src/pages/UserProfilePage.jsx
+- manage.py                    Django management entry point.
+- requirements.txt             Python dependencies.
+- build.sh                     Render build, migration, and admin bootstrap.
+- render.yaml                  Render Blueprint configuration.
+- README.md                    Setup and deployment guide.
+- deteil.txt                   This technical handover document.
+- TEST USERS.txt               Development test credentials.
+- .env.example                 Backend environment template.
 
+Django project:
 
-3) Domain Model
----------------
-UserProfile (ewaste/models.py):
-- OneToOne with Django User.
-- Fields: role, phone, address.
-- Roles: user, admin, collector.
+- backend/settings.py          Environment, database, security, static files.
+- backend/urls.py              /admin/ and /api/ root routes.
+- backend/wsgi.py              Gunicorn/WSGI entry point.
+- backend/asgi.py              ASGI entry point.
 
-EWasteRequest (ewaste/models.py):
-- Fields: item_type, quantity, condition, brand, pickup_address, pickup_date, notes.
-- Lifecycle status: pending, assigned, completed, cancelled.
-- assigned_collector -> Django User (must have collector role).
-- assigned_at, completed_at, created_at, updated_at.
-- Model-level validation enforces role and status/collector consistency.
+Django application:
 
-Signals:
-- ewaste/signals.py auto-creates UserProfile for each created User.
+- ewaste/models.py             UserProfile and EWasteRequest models.
+- ewaste/views.py              JSON API endpoints and authorization.
+- ewaste/urls.py               API URL patterns.
+- ewaste/middleware.py         Custom credential-aware CORS middleware.
+- ewaste/signals.py            Automatic UserProfile creation and admin role.
+- ewaste/admin.py              Django admin registrations.
+- ewaste/report_pdf.py         Nine-page monthly PDF report generator.
+- ewaste/tests.py              Eight backend integration tests.
+- ewaste/migrations/           Database schema history.
 
+React frontend:
 
-4) Authentication and Authorization
------------------------------------
-Auth model:
-- Django session authentication with cookies.
-- Frontend uses fetch with credentials included.
-
-Role authorization:
-- Backend checks role in endpoints using UserProfile role.
-- Admin-only operations: list collectors, register collectors, assign collector, dashboard stats, report export.
-- Collector-only constraints: can act on assigned requests only.
-- User-only constraints: can create own requests and edit pending own requests.
-
-CSRF:
-- CSRF protection enabled by middleware.
-- Frontend automatically fetches CSRF cookie endpoint (/api/auth/csrf/) for unsafe methods.
-- Frontend sends X-CSRFToken header on POST/PATCH/etc.
+- frontend/src/App.jsx                         Session restoration and role shell.
+- frontend/src/api.js                         API, cookies, and CSRF client.
+- frontend/src/constants.js                   Forms and device option lists.
+- frontend/src/styles.css                     Responsive global design system.
+- frontend/src/pages/WelcomePage.jsx           Public landing page.
+- frontend/src/pages/AuthPage.jsx              Login, registration, reset UI.
+- frontend/src/pages/UserDashboard.jsx         User request workflow.
+- frontend/src/pages/UserProfilePage.jsx       User profile editor.
+- frontend/src/pages/AdminDashboard.jsx        Admin operations and analytics.
+- frontend/src/pages/CollectorDashboard.jsx    Collector task workflow.
+- frontend/src/components/RequestTable.jsx     User request history table.
+- frontend/src/components/StatusBadge.jsx      Request status presentation.
+- frontend/src/components/BrandMark.jsx        Shared brand logo.
+- frontend/vercel.json                         Build and API rewrite rules.
+- frontend/vite.config.js                      Local /api proxy to Django.
+- frontend/package.json                        Scripts and Node requirements.
+- frontend/package-lock.json                   Locked dependency graph.
 
 
-5) API Endpoints
+4. DATABASE AND DOMAIN MODEL
+----------------------------
+
+4.1 Django User
+
+The system uses django.contrib.auth.models.User. Normal registrations use the
+email address as the username. Existing username-based accounts remain
+supported during login.
+
+Relevant standard fields include:
+
+- username
+- email
+- first_name
+- last_name
+- password hash
+- is_active
+- is_staff
+- is_superuser
+- date_joined
+- last_login
+
+4.2 UserProfile
+
+UserProfile has a one-to-one relationship with Django User.
+
+Fields:
+
+- role: user, admin, or collector.
+- phone: optional text, maximum 20 characters.
+- address: optional text, maximum 255 characters.
+
+A post-save signal guarantees that every Django user has a profile. Staff and
+superuser accounts are automatically assigned the admin profile role.
+
+4.3 EWasteRequest
+
+Fields:
+
+- user: request owner.
+- item_type: maximum 120 characters.
+- quantity: positive integer, default 1.
+- condition: optional, maximum 50 characters.
+- brand: optional, maximum 80 characters.
+- pickup_address: maximum 255 characters.
+- pickup_date: requested collection date.
+- notes: optional free text.
+- status: pending, assigned, completed, or cancelled.
+- assigned_collector: optional Django User foreign key.
+- assigned_at: assignment timestamp.
+- completed_at: completion timestamp.
+- created_at and updated_at: audit timestamps.
+
+Model validation enforces the following invariants:
+
+- An assigned collector must have the collector role.
+- Assigned and completed requests must have a collector.
+- A completed request receives a completion timestamp.
+- full_clean() runs before every EWasteRequest save.
+
+4.4 Removed model
+
+ServiceRating existed in migration 0002 and was removed in migration 0003.
+It is not part of the current application model.
+
+4.5 Features not represented by database models
+
+The project does not currently have structured models for:
+
+- Collection centers.
+- Districts or regions.
+- GPS coordinates.
+- Login/audit events.
+- Notifications.
+- Equipment shortages or technical support incidents.
+- Verified material weights or recycling output.
+
+Reports must not treat these items as measured database facts.
+
+
+5. REQUEST LIFECYCLE AND ROLE WORKFLOW
+--------------------------------------
+
+Normal lifecycle:
+
+1. A user submits a request.
+2. The request is created with pending status.
+3. An admin selects a collector and assigns the request.
+4. Assignment stores the collector, assigned status, and assigned_at time.
+5. The assigned collector sees the request in their task list.
+6. The collector or admin marks the request completed.
+7. Completion stores completed status and completed_at time.
+
+User permissions:
+
+- Can list only requests owned by the logged-in user.
+- Can create requests.
+- Can view only owned requests.
+- Can edit only owned pending requests.
+- Cannot change workflow status.
+
+Collector permissions:
+
+- Can list only requests assigned to the logged-in collector.
+- Can view only assigned requests.
+- Can update only assigned requests.
+- Cannot create pickup requests.
+- Cannot assign collectors.
+
+Admin permissions:
+
+- Can list all pickup requests.
+- Can assign collectors.
+- Can update supported statuses.
+- Can view registered users and collectors.
+- Can register collector accounts.
+- Can access global dashboard statistics.
+- Can generate monthly PDF reports.
+
+
+6. API REFERENCE
 ----------------
+
 Base path: /api/
 
-Auth:
-- POST /auth/register/
-- GET  /auth/csrf/
-- POST /auth/login/
-- POST /auth/forgot-password/
-- POST /auth/logout/
+Authentication:
 
-User/Profile:
-- GET  /me/
-- GET  /profile/
-- PATCH /profile/
+- POST auth/register/
+  Creates a standard user account.
 
-Requests:
-- GET  /requests/
-- POST /requests/
-- GET  /requests/<id>/
-- PATCH /requests/<id>/
-- POST /requests/<id>/assign/
-- POST /requests/<id>/status/
+- GET auth/csrf/
+  Initializes the CSRF cookie used by unsafe requests.
 
-Admin Data:
-- GET  /collectors/
-- POST /collectors/register/
-- GET  /dashboard/stats/
-- GET  /reports/monthly-pdf/?month=YYYY-MM
+- POST auth/login/
+  Authenticates with email or legacy username and creates a session.
+
+- POST auth/forgot-password/
+  Directly changes a password using email and a new password.
+  This endpoint is not safe for production until verification is added.
+
+- POST auth/logout/
+  Ends the current Django session.
+
+Current account:
+
+- GET me/
+  Returns the authenticated user and profile role.
+
+- GET profile/
+  Returns the authenticated profile.
+
+- PATCH profile/
+  Updates name, email, phone, and address.
+
+Pickup requests:
+
+- GET requests/
+  Returns rows filtered by role.
+
+- POST requests/
+  Creates a request; standard users only.
+
+- GET requests/<request_id>/
+  Returns one request if permitted by role and ownership.
+
+- PATCH requests/<request_id>/
+  Updates an owned pending request.
+
+- POST requests/<request_id>/assign/
+  Assigns a collector; admin only.
+
+- POST requests/<request_id>/status/
+  Updates workflow status with role and assignment checks.
+
+Administration:
+
+- GET collectors/
+  Lists collector accounts; admin only.
+
+- GET users/
+  Lists standard user accounts; admin only.
+
+- POST collectors/register/
+  Creates a collector account; admin only.
+
+- GET dashboard/stats/
+  Returns global request counts; admin only.
+
+- GET reports/monthly-pdf/?month=YYYY-MM
+  Returns an attachment PDF; admin only.
+
+Errors are normally returned as JSON in this form:
+
+  {"error": "Message"}
 
 
-6) Frontend Behavior
---------------------
-Main app:
-- Restores stored user from localStorage.
-- Verifies session with /api/me on startup.
-- Loads requests after authenticated startup.
+7. AUTHENTICATION, CSRF, CORS, AND COOKIES
+-----------------------------------------
 
-Admin dashboard:
-- Request management table (assign collector, complete status).
-- Collector registration feature:
-  - Shows "Collectors Registration" button.
-  - Displays form on click.
-  - Supports password show/hide toggle using same emoji style as other forms.
-  - Hides form and shows success message after successful registration.
-- Monthly PDF export.
+Authentication uses Django sessions rather than JWT tokens.
+
+Frontend behavior:
+
+- All fetch requests use credentials: include.
+- Unsafe methods first request /api/auth/csrf/ if no csrftoken exists.
+- Unsafe requests send X-CSRFToken.
+- A cached user summary is stored in localStorage for initial rendering.
+- /api/me/ remains the authoritative session check at startup.
+
+CORS behavior:
+
+- SimpleCorsMiddleware supports exact origins and strict wildcard subdomains.
+- Credentials are allowed.
+- Allowed methods include GET, POST, PATCH, PUT, DELETE, and OPTIONS.
+- Allowed headers include Content-Type, Authorization, and X-CSRFToken.
+
+Production cookie behavior:
+
+- Session and CSRF cookies are Secure.
+- SameSite defaults to None in production.
+- The deployed Vercel frontend is a trusted CSRF origin.
+- HSTS and HTTPS redirect settings are enabled in production.
 
 
-7) Security and Hardening Status
+8. FRONTEND APPLICATION BEHAVIOR
 --------------------------------
-Implemented:
-- Removed CSRF exemptions from app mutation endpoints.
-- Added CSRF bootstrap endpoint and frontend CSRF header support.
-- Added numeric parsing validation for request quantity and collector_id.
-- Case-insensitive email uniqueness check in profile update.
-- Added basic cache-based throttling on register/login/forgot-password endpoints.
-- Removed static committed secret key fallback.
-- Added production guard:
-  - If DJANGO_ENV=production and DJANGO_SECRET_KEY missing -> startup fails.
 
-Pending high-risk item:
-- /api/auth/forgot-password/ still allows password reset with email + new_password only.
-  It needs a secure reset flow (token/OTP/email verification) for production safety.
+8.1 Application shell
+
+App.jsx restores the cached user, verifies the server session, loads requests,
+and selects the correct dashboard by role. Workspace navigation uses URL hash
+values such as #/workspace/dashboard and scrolls to page sections.
+
+8.2 Public landing page
+
+The landing page contains marketing content, services, process steps,
+environmental impact messaging, FAQs, calls to action, and a Zanzibar footer.
+Several public figures are presentation content and are not loaded from the
+database.
+
+8.3 Authentication page
+
+The interface supports:
+
+- Login.
+- Standard user registration.
+- Password show/hide controls.
+- Client-side password confirmation.
+- Terms checkbox for registration.
+- Direct password reset UI.
+
+The remember-me control is currently visual state only; Django session expiry
+is not changed from the frontend.
+
+8.4 User dashboard
+
+- Summary cards for total, pending, assigned, and completed requests.
+- Estimated environmental-impact cards based on fixed multipliers.
+- New pickup form with item, brand, condition, quantity, date, address, notes.
+- Custom brand input when Other is selected.
+- Pickup history table.
+- Profile editor.
+- Workspace navigation for dashboard, new request, requests, and profile.
+
+8.5 Admin dashboard
+
+- Global request KPI cards.
+- User and collector counts.
+- User table and collector table.
+- Collector account registration form.
+- Collector assignment and request-completion actions.
+- Monthly report month selector and PDF export.
+- Browser print-based Export Data action.
+- Workspace navigation for requests, users, collectors, reports, analytics.
+
+The Requests by Month chart uses fixed demonstration bar heights rather than
+aggregated monthly database values. The notification and search controls are
+also visual only.
+
+8.6 Collector dashboard
+
+- Assigned, completed, today, and total counters.
+- Assigned pickup table.
+- View Map action using a Google Maps embed query.
+- Mark Complete action with duplicate-submit protection.
+- Completed pickup history.
+- Workspace navigation for dashboard, assigned tasks, and completed tasks.
+
+Known navigation defect: collector-completed-tasks is currently attached to
+the map card instead of the Collected History card. Therefore, Completed Tasks
+scrolls to the wrong section.
+
+8.7 Styling and responsiveness
+
+- Inter is the body font; Poppins is used for display headings.
+- Shared typography variables normalize text sizes.
+- Dashboards use responsive cards, tables, sidebar navigation, and mobile
+  navigation overlays.
+- Collector and admin action buttons have scoped loading, hover, focus, and
+  disabled states.
+- Tables retain wide minimum widths and scroll horizontally on small screens.
 
 
-8) Configuration (Environment Variables)
-----------------------------------------
-Core:
+9. MONTHLY PDF REPORT
+---------------------
+
+The admin report endpoint calls ewaste/report_pdf.py.
+
+Current report characteristics:
+
+- A4 portrait.
+- Nine pages.
+- Cover page and report metadata.
+- Table of contents.
+- Executive summary and KPI cards.
+- Monthly overview.
+- Collection performance and charts.
+- Device category analysis.
+- Collector performance table.
+- User activity.
+- Estimated environmental impact.
+- Request status analysis.
+- Address-based geographic summary.
+- Recent activity table.
+- Issues, recommendations, conclusion, and appendix.
+- Page numbers, headers, and footers.
+
+Environmental values are estimates derived from fixed per-device factors.
+The report labels unsupported collection-center and login-activity metrics as
+unavailable instead of inventing records.
+
+Technical debt: monthly_report_pdf_view returns the new report before an old
+legacy PDF implementation in ewaste/views.py. The old block is unreachable and
+should be removed to reduce file size, duplicate imports, and maintenance risk.
+
+
+10. VALIDATION AND INPUT RULES
+------------------------------
+
+Registration:
+
+- First name, last name, email, and password are required.
+- Email uniqueness is checked case-insensitively.
+- Django password validators are applied.
+
+Pickup creation:
+
+- Item type, address, and pickup date are required.
+- Quantity must be an integer of at least 1.
+- Date must use YYYY-MM-DD and cannot be in the past.
+
+Pickup editing:
+
+- Only the owner can edit.
+- Only pending requests can be edited.
+- Empty item type and address are rejected.
+- Quantity and date are revalidated.
+- Notes, phone, address, and other optional values can be cleared.
+
+Assignment and completion:
+
+- Collector ID must be numeric and must reference a collector role.
+- Completed and cancelled requests cannot be assigned.
+- A request cannot be completed without an assigned collector.
+
+
+11. TEST COVERAGE AND VERIFIED AUDIT RESULTS
+--------------------------------------------
+
+Audit commands were run on 14 July 2026.
+
+Backend test result:
+
+- 8 tests discovered.
+- 8 tests passed.
+- Tests ran against isolated in-memory SQLite.
+- Production Neon data was not modified.
+
+Covered backend scenarios:
+
+- Registration, login, and pickup creation.
+- Admin collector listing.
+- Admin user listing.
+- Admin collector registration.
+- Non-admin collector-registration rejection.
+- Clearing profile fields.
+- Clearing request notes.
+- Preventing completion before collector assignment.
+
+Django validation result:
+
+- manage.py check --deploy: passed with no issues.
+- makemigrations --check --dry-run: no model changes detected.
+- All migrations apply successfully to an empty test database.
+
+Frontend validation result:
+
+- npm dependency tree: valid.
+- Vite production build: passed.
+- 43 modules transformed.
+- node_modules files tracked by Git: 0.
+- package-lock.json is tracked.
+
+Test limitations:
+
+- There are no automated frontend component or browser tests.
+- npm test currently runs the production build; it is not a behavioral test.
+- PDF endpoint behavior is not covered by ewaste/tests.py.
+- CORS, CSRF, throttling, and deployment scripts lack dedicated tests.
+- Cancel/reassign status transitions have limited automated coverage.
+
+
+12. LOCAL DEVELOPMENT
+---------------------
+
+Backend from the repository root:
+
+  python -m venv venv
+  venv\Scripts\Activate.ps1
+  pip install -r requirements.txt
+  python manage.py migrate
+  python manage.py runserver
+
+Frontend from frontend/:
+
+  npm install
+  npm run dev
+
+Default local URLs:
+
+- Frontend: http://127.0.0.1:5173
+- Backend: http://127.0.0.1:8000
+- Django admin: http://127.0.0.1:8000/admin/
+
+Local Vite proxies /api to http://127.0.0.1:8000.
+
+Recommended validation:
+
+  python manage.py check
+  python manage.py makemigrations --check --dry-run
+  python manage.py test ewaste
+  npm --prefix frontend run build
+
+When .env points to Neon, explicitly override DATABASE_URL before running tests
+if an isolated SQLite database is required.
+
+
+13. ENVIRONMENT VARIABLES
+-------------------------
+
+Core Django:
+
+- DJANGO_ENV
 - DJANGO_DEBUG
 - DJANGO_SECRET_KEY
-- DJANGO_ENV (set to production in production)
 - DJANGO_ALLOWED_HOSTS
 
 Database:
-- DJANGO_DB_ENGINE
+
+- DATABASE_URL                 Runtime connection, normally pooled Neon URL.
+- MIGRATION_DATABASE_URL       Optional direct connection for migrations.
+- DJANGO_DB_ENGINE             Fallback when DATABASE_URL is absent.
 - DJANGO_DB_NAME
 - DJANGO_DB_USER
 - DJANGO_DB_PASSWORD
 - DJANGO_DB_HOST
 - DJANGO_DB_PORT
 
-Frontend/CORS/CSRF:
+Frontend and request security:
+
 - FRONTEND_ORIGIN
 - FRONTEND_ORIGINS
 - DJANGO_CSRF_TRUSTED_ORIGINS
-
-Security:
+- DJANGO_SESSION_COOKIE_SAMESITE
+- DJANGO_CSRF_COOKIE_SAMESITE
 - DJANGO_SECURE_SSL_REDIRECT
 - DJANGO_SECURE_HSTS_SECONDS
 - DJANGO_SECURE_HSTS_INCLUDE_SUBDOMAINS
 - DJANGO_SECURE_HSTS_PRELOAD
-- DJANGO_SESSION_COOKIE_SAMESITE
-- DJANGO_CSRF_COOKIE_SAMESITE
+
+Deployment administrator:
+
+- DJANGO_SUPERUSER_EMAIL
+- DJANGO_SUPERUSER_USERNAME
+- DJANGO_SUPERUSER_PASSWORD
+
+Frontend build:
+
+- VITE_API_BASE_URL            Optional; default is same-origin /api.
+
+Never commit actual database URLs, secret keys, or passwords.
 
 
-9) Local Development Commands
------------------------------
-Backend:
-- python manage.py check
-- python manage.py runserver
-- python manage.py test ewaste
-- python manage.py check --deploy
-
-Frontend:
-- npm --prefix frontend run dev
-- npm --prefix frontend run build
-- npm --prefix frontend run check
-- npm --prefix frontend run test
-
-
-10) Test/Build Snapshot
+14. DEPLOYMENT WORKFLOW
 -----------------------
-Current verification status:
-- Django checks: pass
-- Django tests (ewaste): pass
-- Frontend production build: pass
+
+14.1 Render backend
+
+render.yaml defines one Python web service:
+
+- Build command: bash ./build.sh
+- Start command: gunicorn backend.wsgi:application
+- Production mode enabled.
+- Vercel origin configured for CORS and CSRF.
+- Secure SameSite=None cookies configured.
+- DATABASE_URL and MIGRATION_DATABASE_URL expected as Render secrets.
+
+build.sh performs:
+
+1. pip install -r requirements.txt
+2. collectstatic
+3. migrations, using MIGRATION_DATABASE_URL when available
+4. idempotent superuser creation/update when credentials are present
+
+14.2 Vercel frontend
+
+frontend/vercel.json defines:
+
+- Framework: Vite.
+- Install command: npm install --include=dev.
+- Build command: npm run build.
+- Output directory: dist.
+- /api/* rewrite to the Render backend.
+- SPA fallback to index.html.
+
+Vercel should use frontend/ as the Root Directory.
+
+14.3 Database consistency
+
+Local .env is ignored by Git and does not update Render. To make production use
+a new Neon database, update DATABASE_URL and MIGRATION_DATABASE_URL in the
+Render dashboard and redeploy. Vercel does not connect directly to PostgreSQL;
+it communicates through the Render API.
 
 
-11) Notes
----------
-- The file name "deteil.txt" follows the requested spelling.
-- For production readiness, prioritize replacing the current forgot-password logic with a verified reset-token flow.
+15. SECURITY AUDIT AND PRIORITIZED RISKS
+----------------------------------------
+
+CRITICAL - Rotate and remove committed administrator password
+
+render.yaml currently contains DJANGO_SUPERUSER_PASSWORD as a literal value.
+This is a committed credential and should be considered compromised.
+
+Required action:
+
+1. Rotate the password immediately in Render.
+2. Change render.yaml back to:
+
+     - key: DJANGO_SUPERUSER_PASSWORD
+       sync: false
+
+3. Remove the credential from Git history if the repository is public.
+4. Prefer a unique high-entropy password and enable operational access control.
+
+CRITICAL - Replace direct password reset
+
+/api/auth/forgot-password/ resets a password using only an email address and a
+new password. Anyone who knows a registered email can take over that account.
+
+Required action:
+
+- Use Django password-reset tokens delivered to verified email, or a secure OTP
+  with expiry, one-time use, throttling, and non-enumerating responses.
+
+HIGH - Rotate exposed test credentials
+
+TEST USERS.txt is tracked and contains passwords. These accounts must be
+development-only. Never reuse their passwords in production. Remove or sanitize
+the file before public distribution.
+
+HIGH - Do not expose exception details from PDF generation
+
+The PDF endpoint returns str(exc) to authenticated admins. Log exceptions on the
+server and return a generic error message to avoid disclosing internal details.
+
+MEDIUM - Improve throttling storage
+
+Authentication throttling uses Django's default cache. Without a shared cache,
+limits are per process and disappear after restarts. Use Redis or another shared
+production cache and consider django-ratelimit or equivalent controls.
+
+MEDIUM - Harden account identity rules
+
+Email uniqueness is enforced in view logic but not by a case-insensitive database
+constraint. Concurrent requests can still create duplicates. Consider a custom
+user model with normalized unique email.
+
+MEDIUM - Remove legacy unreachable report code
+
+Delete the old report implementation after the early return in views.py and
+remove its unused imports.
+
+MEDIUM - Add frontend and security tests
+
+Add tests for routing, form submission, API failures, CSRF, CORS, password reset,
+PDF generation, admin authorization, and collector transitions.
+
+LOW - Stop tracking generated frontend dist assets
+
+Six files under frontend/dist are tracked. Vercel builds from source, so these
+generated assets are unnecessary in Git and create noisy hashed-file changes.
+Add frontend/dist/ to .gitignore and remove it from tracking if no other deploy
+process depends on committed build output.
+
+
+16. FUNCTIONAL LIMITATIONS AND TECHNICAL DEBT
+---------------------------------------------
+
+- Collection centers are not implemented as a model or workflow.
+- Notifications are not implemented; the remaining admin/user bell is visual.
+- Search input and Ctrl+K label have no search behavior.
+- Admin monthly bar chart uses fixed sample values.
+- Landing statistics and member counts are static marketing content.
+- Remember me does not control Django session duration.
+- Explore recycling tips links to #tips, but no verified tips section workflow
+  is connected from the dashboard.
+- Export Data calls window.print(); it does not export CSV or spreadsheet data.
+- Collector Completed Tasks navigation scrolls to the map card.
+- Environmental impact uses estimates, not measured device weights.
+- Address strings are used for maps and geography; there are no coordinates.
+- There is no cancellation-reason, issue-ticket, or equipment-tracking module.
+- There is no real-time refresh, WebSocket layer, or notification service.
+- App.jsx is densely formatted and mixes routing, session, and layout concerns.
+- views.py contains many function-based endpoints in one large module.
+
+
+17. RECOMMENDED ROADMAP
+-----------------------
+
+Immediate security work:
+
+1. Rotate and uncommit the Render superuser password.
+2. Replace the direct password-reset endpoint.
+3. Rotate or remove public test-account credentials.
+4. Stop returning raw PDF exception messages.
+
+Near-term correctness work:
+
+1. Fix the collector Completed Tasks section ID.
+2. Replace static admin chart data with database aggregation.
+3. Add explicit status-transition rules and tests.
+4. Add PDF endpoint tests.
+5. Add React component and end-to-end role workflow tests.
+
+Product expansion:
+
+1. Add CollectionCenter, District/Region, and location-coordinate models.
+2. Add verified material weights and recycling-output records.
+3. Add notification and audit-event models.
+4. Add cancellation reasons and operational issue tracking.
+5. Add CSV exports and scheduled reports.
+6. Add shared Redis caching and production monitoring.
+
+Maintainability:
+
+1. Split views.py into auth, requests, admin, and reporting modules.
+2. Remove unreachable legacy PDF code.
+3. Split styles.css into design tokens and feature-level styles.
+4. Introduce a real routing solution if navigation complexity grows.
+5. Remove frontend/dist from Git if it is not required.
+6. Keep README.md and this file synchronized after major releases.
+
+
+18. FINAL AUDIT ASSESSMENT
+--------------------------
+
+The core e-waste request workflow is functional and well represented by the
+backend tests. Role-based request visibility, collector assignment, completion,
+profile editing, CSRF handling, PostgreSQL configuration, Render deployment,
+Vercel proxying, and frontend production compilation are all implemented.
+
+The project is suitable for demonstration and supervised academic evaluation,
+but it should not be considered production-secure until the committed deployment
+password is rotated and the direct password-reset endpoint is replaced. Several
+dashboard analytics and public metrics remain presentation-only, and collection
+centers are intentionally absent from the current data model.
+
+Verified audit snapshot:
+
+- Backend tests: 8/8 passed.
+- Django deployment check: passed.
+- Migration drift: none.
+- Frontend production build: passed.
+- Frontend dependencies: valid.
+- node_modules tracked by Git: no.
+- Known critical security items: 2.
+
+End of document.
