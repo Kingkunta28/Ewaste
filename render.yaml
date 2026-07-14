@@ -32,8 +32,8 @@ services:
       - key: MIGRATION_DATABASE_URL
         sync: false
       - key: DJANGO_SUPERUSER_EMAIL
-        sync: false
+        value: raya@ex.com
       - key: DJANGO_SUPERUSER_USERNAME
-        sync: false
+        value: raya@ex.com
       - key: DJANGO_SUPERUSER_PASSWORD
-        sync: false
+        value: Raya@123

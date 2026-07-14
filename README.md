@@ -54,9 +54,9 @@ Frontend URL: `http://127.0.0.1:5173`
    - `FRONTEND_ORIGIN=https://ewaste-lemon.vercel.app`
    - `FRONTEND_ORIGINS=https://ewaste-lemon.vercel.app`
    - `DJANGO_CSRF_TRUSTED_ORIGINS=https://ewaste-lemon.vercel.app`
-   - `DJANGO_SUPERUSER_EMAIL=Raya@gmail.com`
-   - `DJANGO_SUPERUSER_USERNAME=Raya@gmail.com`
-   - `DJANGO_SUPERUSER_PASSWORD=Raya@1234`
+   - `DJANGO_SUPERUSER_EMAIL=raya@ex.com`
+   - `DJANGO_SUPERUSER_USERNAME=raya@ex.com`
+   - `DJANGO_SUPERUSER_PASSWORD=<set this securely in Render>`
 5. Backend URL: `https://ewaste-backend-rjky.onrender.com`.
 6. On each deploy, `build.sh` will automatically create/update this superuser.
 
