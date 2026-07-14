@@ -23,6 +23,7 @@ export default function AdminDashboard({
   const [showCollectorRegistration, setShowCollectorRegistration] =
     useState(false);
   const [showCollectorPassword, setShowCollectorPassword] = useState(false);
+  const [registeringCollector, setRegisteringCollector] = useState(false);
   const [reportMonth, setReportMonth] = useState(currentMonth);
   const [exportingReport, setExportingReport] = useState(false);
   const [error, setError] = useState("");
@@ -101,8 +102,10 @@ export default function AdminDashboard({
 
   const registerCollector = async (event) => {
     event.preventDefault();
+    if (registeringCollector) return;
     setError("");
     setSuccess("");
+    setRegisteringCollector(true);
     try {
       await api.registerCollector(collectorForm);
       setCollectorForm({
@@ -116,9 +119,11 @@ export default function AdminDashboard({
       setShowCollectorPassword(false);
       setSuccess("Collector account registered successfully.");
       setShowCollectorRegistration(false);
-      loadDashboardData().catch((err) => setError(err.message));
+      await loadDashboardData();
     } catch (err) {
       setError(err.message);
+    } finally {
+      setRegisteringCollector(false);
     }
   };
 
@@ -374,7 +379,14 @@ export default function AdminDashboard({
                 onChange={(e) => updateCollectorForm("address", e.target.value)}
               />
             </label>
-            <button type="submit">Register Collector</button>
+            <button
+              className="collector-register-submit"
+              type="submit"
+              disabled={registeringCollector}
+            >
+              <span aria-hidden="true">+</span>
+              {registeringCollector ? "Registering..." : "Register Collector"}
+            </button>
           </form>
         ) : null}
         <table>
