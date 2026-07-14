@@ -3881,3 +3881,93 @@ h4,
         --text-lg: 16px;
     }
 }
+
+/* Admin collector action buttons */
+.collector-actions {
+    display: grid;
+    grid-template-columns: repeat(3, max-content);
+    align-items: center;
+    gap: 12px;
+    margin: 0 0 24px;
+    padding: 14px;
+    border: 1px solid #d9e8de;
+    border-radius: 14px;
+    background: #f6faf7;
+}
+
+.collector-actions button {
+    width: auto !important;
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 9px;
+    padding: 10px 16px !important;
+    border-radius: 10px !important;
+    font-size: 13px !important;
+    font-weight: 700 !important;
+    line-height: 1.2;
+    white-space: nowrap;
+    transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease !important;
+}
+
+.collector-actions button>span {
+    width: 24px;
+    height: 24px;
+    display: inline-grid;
+    flex: 0 0 24px;
+    place-items: center;
+    border-radius: 7px;
+    font-size: 16px;
+    line-height: 1;
+}
+
+.collector-actions .action-primary {
+    border: 1px solid #15803d !important;
+    background: linear-gradient(135deg, #16a34a, #15803d) !important;
+    color: #fff !important;
+    box-shadow: 0 8px 18px rgba(22, 163, 74, .2) !important;
+}
+
+.collector-actions .action-primary>span {
+    background: rgba(255, 255, 255, .18);
+    color: #fff;
+}
+
+.collector-actions .action-secondary {
+    border: 1px solid #c9dfd0 !important;
+    background: #fff !important;
+    color: #14532d !important;
+    box-shadow: 0 4px 12px rgba(20, 83, 45, .06) !important;
+}
+
+.collector-actions .action-secondary>span {
+    background: #e8f7ed;
+    color: #15803d;
+}
+
+.collector-actions button:hover:not(:disabled) {
+    transform: translateY(-2px) !important;
+    border-color: #86c99b !important;
+    box-shadow: 0 10px 22px rgba(20, 83, 45, .14) !important;
+}
+
+.collector-actions button:focus-visible {
+    outline: 3px solid rgba(22, 163, 74, .22);
+    outline-offset: 2px;
+}
+
+.collector-actions button:disabled {
+    cursor: not-allowed;
+    opacity: .55;
+}
+
+@media (max-width: 760px) {
+    .collector-actions {
+        grid-template-columns: 1fr;
+    }
+
+    .collector-actions button {
+        width: 100% !important;
+    }
+}
