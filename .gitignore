@@ -4,4 +4,4 @@
 __pycache__/
 *.py[cod]
 staticfiles/
-
+node_modules/
