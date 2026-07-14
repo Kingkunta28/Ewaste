@@ -3618,3 +3618,266 @@ tbody tr:nth-child(4) {
         transform: none !important
     }
 }
+
+/* Collector dashboard typography */
+.role-collector .collector-mini-stats strong {
+    font-size: 28px;
+}
+
+.role-collector .collector-mini-stats span {
+    color: #3f4f45;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.role-collector .collector-performance span {
+    color: #425248;
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.role-collector .collector-performance strong {
+    font-size: 25px;
+}
+
+.role-collector .collector-performance small {
+    color: #59685f;
+    font-size: 11px;
+    line-height: 1.45;
+}
+
+.role-collector .section-head h3 {
+    font-size: 18px;
+}
+
+.role-collector .section-head p {
+    color: #526158;
+    font-size: 13px;
+    line-height: 1.55;
+}
+
+.role-collector th {
+    font-size: 11px;
+}
+
+.role-collector td {
+    font-size: 13px;
+    line-height: 1.4;
+}
+
+.role-collector .status-pill {
+    font-size: 11px;
+}
+
+.role-collector .table-actions button {
+    padding: 9px 12px;
+    font-size: 12px;
+}
+
+.role-collector .empty-state h3 {
+    font-size: 17px;
+}
+
+.role-collector .empty-state p {
+    font-size: 13px;
+}
+
+@media (max-width: 560px) {
+    .role-collector .collector-mini-stats strong {
+        font-size: 25px;
+    }
+
+    .role-collector .section-head h3 {
+        font-size: 17px;
+    }
+}
+
+/* Shared typography scale and cross-project consistency */
+:root {
+    --font-display: "Poppins", sans-serif;
+    --font-body: "Inter", sans-serif;
+    --text-xs: 11px;
+    --text-sm: 12px;
+    --text-md: 13px;
+    --text-base: 14px;
+    --text-lg: 17px;
+    --text-xl: 22px;
+}
+
+body {
+    font-family: var(--font-body);
+    font-size: var(--text-base);
+    line-height: 1.5;
+}
+
+h1,
+h2,
+h3,
+h4,
+.brand-mark {
+    font-family: var(--font-display);
+}
+
+/* Landing page */
+.landing-page p,
+.feature-card p,
+.service-row p,
+.step-card p,
+.faq-item>p,
+.cta-banner p {
+    font-size: var(--text-base) !important;
+    line-height: 1.65;
+}
+
+.nav-links a,
+.nav-actions button,
+.hero-actions button,
+.hero-actions a,
+.feature-card a,
+.landing-footer a,
+.landing-footer button {
+    font-size: var(--text-md) !important;
+}
+
+.eyebrow,
+.section-kicker,
+.logo-strip span,
+.service-number,
+.impact-label,
+.impact-stats p,
+.trust-row small,
+.floating-stat small,
+.quote-person small,
+.landing-footer p,
+.footer-bottom {
+    font-size: var(--text-xs) !important;
+}
+
+.feature-card h3,
+.service-row h3,
+.step-card h3 {
+    font-size: var(--text-lg) !important;
+}
+
+/* Authentication */
+.auth-page p,
+.auth-mobile-story p,
+.auth-showcase-copy>p {
+    font-size: var(--text-base) !important;
+}
+
+.auth-page label,
+.field-label,
+.check-label,
+.tabs button,
+.text-link,
+.back-link,
+.reset-back,
+.auth-submit,
+.auth-switch {
+    font-size: var(--text-md) !important;
+}
+
+.auth-page input,
+.auth-page select,
+.auth-page textarea {
+    font-size: var(--text-base) !important;
+}
+
+.auth-pill,
+.auth-proof small,
+.secure-note,
+.password-strength small {
+    font-size: var(--text-xs) !important;
+}
+
+/* Shared dashboard navigation and controls */
+.sidebar-caption,
+.dashboard-search kbd {
+    font-size: var(--text-xs) !important;
+}
+
+.sidebar-nav button,
+.sidebar-logout,
+.dashboard-welcome button,
+.dashboard-shell label,
+.dashboard-shell button,
+.dashboard-search input {
+    font-size: var(--text-md) !important;
+}
+
+.sidebar-impact strong,
+.sidebar-user strong,
+.topbar-user strong {
+    font-size: var(--text-sm) !important;
+}
+
+.sidebar-impact p,
+.sidebar-impact small,
+.sidebar-user small,
+.topbar-user small,
+.dashboard-welcome p,
+.user-stat-box small,
+.stat small,
+.collector-mini-stats small,
+.collector-performance small,
+.impact-widget-stats span,
+.goal-row,
+.chart-labels,
+.chart-legend span,
+.donut-chart small,
+.empty-state p {
+    font-size: var(--text-xs) !important;
+}
+
+.dashboard-welcome small,
+.section-head p,
+.recycling-tip p,
+.role-panel>p,
+.panel-hero p,
+.user-subtitle {
+    font-size: var(--text-md) !important;
+    line-height: 1.55;
+}
+
+.section-head h3,
+.widget-head h3,
+.empty-state h3 {
+    font-size: var(--text-lg) !important;
+}
+
+.user-stat-box>span:not(.stat-icon),
+.stat span,
+.collector-mini-stats span,
+.collector-performance span {
+    font-size: var(--text-sm) !important;
+}
+
+.dashboard-shell input,
+.dashboard-shell select,
+.dashboard-shell textarea {
+    font-size: var(--text-base) !important;
+}
+
+.dashboard-shell th {
+    font-size: var(--text-xs) !important;
+}
+
+.dashboard-shell td {
+    font-size: var(--text-md) !important;
+    line-height: 1.45;
+}
+
+.status-pill,
+.message-box,
+.success,
+.error {
+    font-size: var(--text-sm) !important;
+}
+
+@media (max-width: 560px) {
+    :root {
+        --text-base: 13px;
+        --text-lg: 16px;
+    }
+}

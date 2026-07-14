@@ -6,7 +6,7 @@ const initialProfile = {
   last_name: "",
   email: "",
   phone: "",
-  address: ""
+  address: "",
 };
 
 export default function UserProfilePage({ onProfileSaved }) {
@@ -17,21 +17,23 @@ export default function UserProfilePage({ onProfileSaved }) {
   const [success, setSuccess] = useState("");
 
   useEffect(() => {
-    api.getProfile()
+    api
+      .getProfile()
       .then((profile) => {
         setForm({
           first_name: profile.first_name || "",
           last_name: profile.last_name || "",
           email: profile.email || "",
           phone: profile.phone || "",
-          address: profile.address || ""
+          address: profile.address || "",
         });
       })
       .catch((err) => setError(err.message))
       .finally(() => setLoading(false));
   }, []);
 
-  const onChange = (key, value) => setForm((prev) => ({ ...prev, [key]: value }));
+  const onChange = (key, value) =>
+    setForm((prev) => ({ ...prev, [key]: value }));
 
   const submit = async (event) => {
     event.preventDefault();
@@ -65,7 +67,10 @@ export default function UserProfilePage({ onProfileSaved }) {
         <div>
           <p className="panel-kicker">Account Center</p>
           <h2>My Profile</h2>
-          <p>Update your personal details used for communication and pickup coordination.</p>
+          <p>
+            Update your personal details used for communication and pickup
+            coordination.
+          </p>
         </div>
       </div>
 
@@ -77,23 +82,40 @@ export default function UserProfilePage({ onProfileSaved }) {
         <div className="grid">
           <label>
             First Name
-            <input value={form.first_name} onChange={(e) => onChange("first_name", e.target.value)} />
+            <input
+              value={form.first_name}
+              onChange={(e) => onChange("first_name", e.target.value)}
+            />
           </label>
           <label>
             Last Name
-            <input value={form.last_name} onChange={(e) => onChange("last_name", e.target.value)} />
+            <input
+              value={form.last_name}
+              onChange={(e) => onChange("last_name", e.target.value)}
+            />
           </label>
           <label>
             Email
-            <input type="email" value={form.email} onChange={(e) => onChange("email", e.target.value)} required />
+            <input
+              type="email"
+              value={form.email}
+              onChange={(e) => onChange("email", e.target.value)}
+              required
+            />
           </label>
           <label>
             Phone
-            <input value={form.phone} onChange={(e) => onChange("phone", e.target.value)} />
+            <input
+              value={form.phone}
+              onChange={(e) => onChange("phone", e.target.value)}
+            />
           </label>
           <label>
             Address
-            <input value={form.address} onChange={(e) => onChange("address", e.target.value)} />
+            <input
+              value={form.address}
+              onChange={(e) => onChange("address", e.target.value)}
+            />
           </label>
         </div>
         {error ? <p className="error">{error}</p> : null}
