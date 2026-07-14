@@ -16,15 +16,15 @@ services:
       - key: DJANGO_ALLOWED_HOSTS
         sync: false
       - key: FRONTEND_ORIGIN
-        sync: false
+        value: https://ewaste-lemon.vercel.app
       - key: FRONTEND_ORIGINS
-        sync: false
+        value: https://ewaste-lemon.vercel.app
       - key: DJANGO_CSRF_TRUSTED_ORIGINS
-        sync: false
+        value: https://ewaste-lemon.vercel.app
       - key: DJANGO_SESSION_COOKIE_SAMESITE
-        sync: false
+        value: None
       - key: DJANGO_CSRF_COOKIE_SAMESITE
-        sync: false
+        value: None
       - key: DJANGO_SECRET_KEY
         generateValue: true
       - key: DATABASE_URL

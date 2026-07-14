@@ -51,9 +51,9 @@ Frontend URL: `http://127.0.0.1:5173`
    - A PostgreSQL database
 4. In the backend service env vars, set these with your final Vercel domain:
    - `DJANGO_ALLOWED_HOSTS=ewaste-backend-rjky.onrender.com`
-   - `FRONTEND_ORIGIN=https://your-frontend.vercel.app`
-   - `FRONTEND_ORIGINS=https://your-frontend.vercel.app`
-   - `DJANGO_CSRF_TRUSTED_ORIGINS=https://your-frontend.vercel.app`
+   - `FRONTEND_ORIGIN=https://ewaste-lemon.vercel.app`
+   - `FRONTEND_ORIGINS=https://ewaste-lemon.vercel.app`
+   - `DJANGO_CSRF_TRUSTED_ORIGINS=https://ewaste-lemon.vercel.app`
    - `DJANGO_SUPERUSER_EMAIL=Raya@gmail.com`
    - `DJANGO_SUPERUSER_USERNAME=Raya@gmail.com`
    - `DJANGO_SUPERUSER_PASSWORD=Raya@1234`
