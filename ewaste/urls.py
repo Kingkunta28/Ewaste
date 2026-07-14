@@ -16,6 +16,7 @@ from .views import (
     request_detail_view,
     requests_view,
     update_status_view,
+    users_view,
 )
 
 urlpatterns = [
@@ -31,6 +32,7 @@ urlpatterns = [
     path("requests/<int:request_id>/assign/", assign_request_view, name="request-assign"),
     path("requests/<int:request_id>/status/", update_status_view, name="request-status"),
     path("collectors/", collectors_view, name="collectors"),
+    path("users/", users_view, name="users"),
     path("collectors/register/", register_collector_view, name="register-collector"),
     path("dashboard/stats/", dashboard_stats_view, name="dashboard-stats"),
     path("reports/monthly-pdf/", monthly_report_pdf_view, name="monthly-report-pdf"),

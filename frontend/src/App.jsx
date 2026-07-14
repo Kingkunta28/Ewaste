@@ -12,6 +12,10 @@ import BrandMark from "./components/BrandMark";
 
 export default function App() {
   const readGuestView = () => ((window.location.hash || "").toLowerCase() === "#/auth" ? "auth" : "welcome");
+  const readUserView = () => {
+    const match = (window.location.hash || "").toLowerCase().match(/^#\/workspace\/(dashboard|new-request|requests|profile|assigned-tasks|completed-tasks|manage-requests|users|collectors|reports|analytics)$/);
+    return match?.[1] || "dashboard";
+  };
   const [user, setUser] = useState(() => {
     try {
       const raw = localStorage.getItem(USER_STORAGE_KEY);
@@ -24,7 +28,7 @@ export default function App() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [guestView, setGuestView] = useState(readGuestView);
-  const [userView, setUserView] = useState("dashboard");
+  const [userView, setUserView] = useState(readUserView);
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const saveUser = (nextUser) => {
@@ -46,7 +50,10 @@ export default function App() {
   };
 
   useEffect(() => {
-    const onHashChange = () => setGuestView(readGuestView());
+    const onHashChange = () => {
+      setGuestView(readGuestView());
+      setUserView(readUserView());
+    };
     window.addEventListener("hashchange", onHashChange);
 
     api.me()
@@ -67,7 +74,7 @@ export default function App() {
 
   const onLogin = async (loggedInUser) => {
     saveUser(loggedInUser);
-    setUserView("dashboard");
+    window.location.hash = "#/workspace/dashboard";
     try {
       await refresh();
     } catch {
@@ -82,6 +89,7 @@ export default function App() {
       saveUser(null);
       setRequests([]);
       setError("");
+      window.location.hash = "#/auth";
     }
   };
 
@@ -90,9 +98,9 @@ export default function App() {
     if (user.role === "user" && userView === "profile") {
       return <UserProfilePage onProfileSaved={(profileUser) => saveUser({ ...user, ...profileUser })} />;
     }
-    if (user.role === "admin") return <AdminDashboard requests={requests} refresh={refresh} />;
-    if (user.role === "collector") return <CollectorDashboard requests={requests} refresh={refresh} />;
-    return <UserDashboard requests={requests} refresh={refresh} />;
+    if (user.role === "admin") return <AdminDashboard requests={requests} refresh={refresh} activeView={userView} />;
+    if (user.role === "collector") return <CollectorDashboard requests={requests} refresh={refresh} activeView={userView} />;
+    return <UserDashboard requests={requests} refresh={refresh} activeView={userView} />;
   }, [user, requests, userView]);
 
   if (loading) {
@@ -104,9 +112,9 @@ export default function App() {
   }
 
   const navByRole = {
-    user: [["\u2302", "Dashboard", "dashboard"], ["+", "New Pickup Request"], ["\u25A4", "My Requests"], ["\u2316", "Collection Centers"], ["\u2662", "Notifications"], ["\u25CB", "Profile", "profile"], ["\u2699", "Settings"]],
-    admin: [["\u2302", "Dashboard"], ["\u25A4", "Manage Requests"], ["\u25CB", "Users"], ["\u2659", "Collectors"], ["\u2316", "Collection Centers"], ["\u25A5", "Reports"], ["\u2301", "Analytics"], ["\u2699", "Settings"]],
-    collector: [["\u2302", "Dashboard"], ["\u25A4", "Assigned Tasks"], ["\u2713", "Completed Tasks"], ["\u25A1", "Schedule"], ["\u2662", "Notifications"], ["\u25CB", "Profile"]]
+    user: [["\u2302", "Dashboard", "dashboard"], ["+", "New Pickup Request", "new-request"], ["\u25A4", "My Requests", "requests"], ["\u25CB", "Profile", "profile"]],
+    admin: [["\u2302", "Dashboard", "dashboard"], ["\u25A4", "Manage Requests", "manage-requests"], ["\u25CB", "Users", "users"], ["\u2659", "Collectors", "collectors"], ["\u25A5", "Reports", "reports"], ["\u2301", "Analytics", "analytics"]],
+    collector: [["\u2302", "Dashboard", "dashboard"], ["\u25A4", "Assigned Tasks", "assigned-tasks"], ["\u2713", "Completed Tasks", "completed-tasks"]]
   };
   const navItems = navByRole[user.role] || navByRole.user;
   const displayName = user.first_name || user.username || "User";
@@ -118,7 +126,7 @@ export default function App() {
         <div className="sidebar-caption">WORKSPACE</div>
         <nav className="sidebar-nav">
           {navItems.map(([icon, label, view], index) => (
-            <button key={label} type="button" className={(view ? userView === view : index === 0 && userView === "dashboard") ? "active" : ""} onClick={() => { if (view) setUserView(view); else if (index === 0) setUserView("dashboard"); setSidebarOpen(false); }}><span>{icon}</span>{label}{label === "Notifications" ? <b>3</b> : null}</button>
+            <button key={label} type="button" className={(view ? userView === view : index === 0 && userView === "dashboard") ? "active" : ""} onClick={() => { if (view) window.location.hash = `#/workspace/${view}`; else if (index === 0) window.location.hash = "#/workspace/dashboard"; setSidebarOpen(false); }}><span>{icon}</span>{label}{label === "Notifications" ? <b>3</b> : null}</button>
           ))}
         </nav>
         <div className="sidebar-impact"><span>{"♻"}</span><strong>Your impact matters</strong><p>Together we're building a cleaner, circular future.</p><div><i style={{ width: "72%" }} /></div><small>72% monthly goal</small></div>
@@ -129,11 +137,11 @@ export default function App() {
       <main className="dashboard-main">
         <header className="dashboard-topbar">
           <div className="mobile-brand"><button type="button" onClick={() => setSidebarOpen(true)} aria-label="Open navigation">{"☰"}</button><BrandMark /></div>
-          <label className="dashboard-search"><span>{"⌕"}</span><input aria-label="Search" placeholder="Search requests, users, centers..." /><kbd>Ctrl K</kbd></label>
-          <div className="dashboard-actions"><button type="button" aria-label="Notifications">{"♢"}<b>3</b></button><div className="topbar-user"><span>{displayName.slice(0, 2).toUpperCase()}</span><div><strong>{displayName}</strong><small>{user.role}</small></div><b>{"⌄"}</b></div></div>
+          <label className="dashboard-search"><span>{"⌕"}</span><input aria-label="Search" placeholder="Search requests, users, collectors..." /><kbd>Ctrl K</kbd></label>
+          <div className="dashboard-actions">{user.role !== "collector" ? <button type="button" aria-label="Notifications">{"♢"}<b>3</b></button> : null}<div className="topbar-user"><span>{displayName.slice(0, 2).toUpperCase()}</span><div><strong>{displayName}</strong><small>{user.role}</small></div><b>{"⌄"}</b></div></div>
         </header>
         <div className="dashboard-content">
-          <div className="dashboard-welcome"><div><p>{new Date().toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}</p><h1>Good day, {displayName}</h1><small>Here's what's happening with your e-waste journey.</small></div><button type="button" onClick={() => setUserView("dashboard")}>+ New pickup request</button></div>
+          <div className="dashboard-welcome"><div><p>{new Date().toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}</p><h1>Good day, {displayName}</h1><small>Here's what's happening with your e-waste journey.</small></div>{user.role === "user" ? <button type="button" onClick={() => { window.location.hash = "#/workspace/new-request"; }}>+ New pickup request</button> : null}</div>
           {error ? <p className="error message-box">{error}</p> : null}
           {panel}
         </div>

@@ -515,9 +515,26 @@ def collectors_view(request):
     collectors = (
         User.objects.filter(profile__role=UserProfile.ROLE_COLLECTOR)
         .order_by("username")
-        .values("id", "username", "email")
+        .values("id", "username", "first_name", "last_name", "email", "profile__phone", "profile__address", "is_active")
     )
     return JsonResponse(list(collectors), safe=False)
+
+
+@ensure_csrf_cookie
+@require_http_methods(["GET"])
+def users_view(request):
+    auth_error = _require_auth(request)
+    if auth_error:
+        return auth_error
+    if _role(request.user) != UserProfile.ROLE_ADMIN:
+        return _error("Only admins can view users", 403)
+
+    users = (
+        User.objects.filter(profile__role=UserProfile.ROLE_USER)
+        .order_by("username")
+        .values("id", "username", "first_name", "last_name", "email", "profile__phone", "profile__address", "is_active", "date_joined")
+    )
+    return JsonResponse(list(users), safe=False)
 
 
 @require_http_methods(["POST"])
@@ -626,6 +643,17 @@ def monthly_report_pdf_view(request):
         month_date = datetime.strptime(month_param, "%Y-%m")
     except ValueError:
         return _error("Invalid month format. Use YYYY-MM")
+
+    try:
+        from .report_pdf import build_monthly_report
+
+        pdf_bytes, filename = build_monthly_report(month_date, request.user.get_full_name() or request.user.username)
+    except Exception as exc:
+        return _error(f"Could not generate PDF report: {exc}", 500)
+
+    response = HttpResponse(pdf_bytes, content_type="application/pdf")
+    response["Content-Disposition"] = f'attachment; filename="{filename}"'
+    return response
 
     try:
         from reportlab.lib.pagesizes import A4

@@ -76,6 +76,7 @@ export const api = {
   createRequest: (payload) => call("/requests/", { method: "POST", body: JSON.stringify(payload) }),
   updateRequest: (id, payload) => call(`/requests/${id}/`, { method: "PATCH", body: JSON.stringify(payload) }),
   listCollectors: () => call("/collectors/"),
+  listUsers: () => call("/users/"),
   registerCollector: (payload) => call("/collectors/register/", { method: "POST", body: JSON.stringify(payload) }),
   assignCollector: (requestId, collectorId) =>
     call(`/requests/${requestId}/assign/`, {
@@ -88,6 +89,7 @@ export const api = {
       body: JSON.stringify({ status })
     }),
   dashboardStats: () => call("/dashboard/stats/"),
+  monthlyReportUrl: (month) => `${API_BASE}/reports/monthly-pdf/?month=${encodeURIComponent(month)}`,
   exportMonthlyReportPdf: async (month) => {
     const response = await fetch(`${API_BASE}/reports/monthly-pdf/?month=${encodeURIComponent(month)}`, {
       method: "GET",

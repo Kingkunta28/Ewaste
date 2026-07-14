@@ -1,18 +1,19 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { api } from "../api";
 import StatusBadge from "../components/StatusBadge";
 
-export default function CollectorDashboard({ requests, refresh }) {
+export default function CollectorDashboard({ requests, refresh, activeView = "dashboard" }) {
   const [error, setError] = useState("");
   const [mapAddress, setMapAddress] = useState("");
+  const [updatingId, setUpdatingId] = useState(null);
   const completedCount = requests.filter((item) => item.status === "completed").length;
-  const pendingCount = requests.filter((item) => item.status === "pending" || item.status === "assigned").length;
+  const assignedCount = requests.filter((item) => item.status === "assigned").length;
   const today = new Date().toISOString().slice(0, 10);
-  const todayCount = requests.filter((item) => item.pickup_date === today).length;
+  const todayCount = requests.filter((item) => item.status === "assigned" && item.pickup_date === today).length;
   const visibleRequests = useMemo(
     () =>
       requests
-        .filter((item) => item.status === "pending" || item.status === "assigned")
+        .filter((item) => item.status === "assigned")
         .sort((a, b) => {
           const aTime = new Date(a.pickup_date).getTime();
           const bTime = new Date(b.pickup_date).getTime();
@@ -20,6 +21,15 @@ export default function CollectorDashboard({ requests, refresh }) {
         }),
     [requests]
   );
+
+  useEffect(() => {
+    const sectionId = activeView === "assigned-tasks" ? "collector-assigned-tasks" : activeView === "completed-tasks" ? "collector-completed-tasks" : "";
+    if (sectionId) {
+      requestAnimationFrame(() => document.getElementById(sectionId)?.scrollIntoView({ behavior: "smooth", block: "start" }));
+    } else if (activeView === "dashboard") {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  }, [activeView]);
   const collectedHistory = useMemo(
     () =>
       requests
@@ -34,11 +44,14 @@ export default function CollectorDashboard({ requests, refresh }) {
 
   const setStatus = async (requestId, status) => {
     setError("");
+    setUpdatingId(requestId);
     try {
       await api.updateStatus(requestId, status);
       await refresh();
     } catch (err) {
       setError(err.message);
+    } finally {
+      setUpdatingId(null);
     }
   };
 
@@ -56,7 +69,7 @@ export default function CollectorDashboard({ requests, refresh }) {
         </div>
         <div className="collector-mini-stats">
           <article><strong>{todayCount}</strong><span>Today's Tasks</span></article>
-          <article><strong>{pendingCount}</strong><span>Pending Tasks</span></article>
+          <article><strong>{assignedCount}</strong><span>Assigned Tasks</span></article>
           <article><strong>{completedCount}</strong><span>Completed Tasks</span></article>
           <article><strong>{requests.length}</strong><span>Total Collections</span></article>
         </div>
@@ -67,7 +80,7 @@ export default function CollectorDashboard({ requests, refresh }) {
         <article className="card"><span>Weekly collections</span><strong>{completedCount}</strong><small>Safe pickups completed</small></article>
         <article className="card"><span>Monthly performance</span><strong>{requests.length ? Math.round((completedCount/requests.length)*100) : 0}%</strong><small>Completion rate</small></article>
       </div>
-      <div className="card">
+      <div id="collector-assigned-tasks" className="card collector-workflow-section">
         <div className="section-head">
           <h3>Assigned Pickups</h3>
           <p>Mark completed after successful collection at the pickup location.</p>
@@ -86,7 +99,7 @@ export default function CollectorDashboard({ requests, refresh }) {
               </tr>
             </thead>
             <tbody>
-              {visibleRequests.map((req) => (
+              {visibleRequests.length ? visibleRequests.map((req) => (
                 <tr key={req.id}>
                   <td>{req.id}</td>
                   <td>{req.user.username}</td>
@@ -101,19 +114,19 @@ export default function CollectorDashboard({ requests, refresh }) {
                       <button type="button" onClick={() => openMap(req.pickup_address)}>
                         View Map
                       </button>
-                      <button type="button" onClick={() => setStatus(req.id, "completed")}>
-                        Mark Complete
+                      <button type="button" disabled={updatingId === req.id} onClick={() => setStatus(req.id, "completed")}>
+                        {updatingId === req.id ? "Updating..." : "Mark Complete"}
                       </button>
                     </div>
                   </td>
                 </tr>
-              ))}
+              )) : <tr><td colSpan={7}>No assigned pickups awaiting collection.</td></tr>}
             </tbody>
           </table>
         </div>
       </div>
 
-      <div className="card">
+      <div id="collector-completed-tasks" className="card collector-workflow-section">
         <div className="section-head">
           <h3>Pickup Location Map</h3>
           <p>{mapAddress ? `Showing map for: ${mapAddress}` : "Select View Map on a pickup request to load location."}</p>

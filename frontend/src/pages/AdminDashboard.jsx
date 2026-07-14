@@ -2,9 +2,10 @@ import { useEffect, useState } from "react";
 import { api } from "../api";
 import StatusBadge from "../components/StatusBadge";
 
-export default function AdminDashboard({ requests, refresh }) {
+export default function AdminDashboard({ requests, refresh, activeView = "dashboard" }) {
   const currentMonth = new Date().toISOString().slice(0, 7);
   const [collectors, setCollectors] = useState([]);
+  const [users, setUsers] = useState([]);
   const [stats, setStats] = useState(null);
   const [selectedCollectors, setSelectedCollectors] = useState({});
   const [collectorForm, setCollectorForm] = useState({
@@ -18,20 +19,37 @@ export default function AdminDashboard({ requests, refresh }) {
   const [showCollectorRegistration, setShowCollectorRegistration] = useState(false);
   const [showCollectorPassword, setShowCollectorPassword] = useState(false);
   const [reportMonth, setReportMonth] = useState(currentMonth);
+  const [exportingReport, setExportingReport] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const cancelledCount = requests.filter((item) => item.status === "cancelled").length;
-  const activeUsers = new Set(requests.map((item) => item.user?.username).filter(Boolean)).size;
 
   const loadDashboardData = async () => {
-    const [collectorData, statData] = await Promise.all([api.listCollectors(), api.dashboardStats()]);
+    const [collectorData, userData, statData] = await Promise.all([api.listCollectors(), api.listUsers(), api.dashboardStats()]);
     setCollectors(collectorData);
+    setUsers(userData);
     setStats(statData);
   };
 
   useEffect(() => {
     loadDashboardData().catch((err) => setError(err.message));
   }, []);
+
+  useEffect(() => {
+    const sectionByView = {
+      reports: "admin-reports",
+      analytics: "admin-analytics",
+      collectors: "admin-collectors",
+      users: "admin-users",
+      "manage-requests": "admin-manage-requests"
+    };
+    const sectionId = sectionByView[activeView];
+    if (sectionId) {
+      requestAnimationFrame(() => document.getElementById(sectionId)?.scrollIntoView({ behavior: "smooth", block: "start" }));
+    } else if (activeView === "dashboard") {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  }, [activeView]);
 
   const assign = async (requestId, collectorId) => {
     if (!collectorId) return;
@@ -92,25 +110,27 @@ export default function AdminDashboard({ requests, refresh }) {
   const exportMonthlyReport = async () => {
     setError("");
     setSuccess("");
+    if (!reportMonth || exportingReport) return;
+    setExportingReport(true);
     try {
-      const pdfBlob = await api.exportMonthlyReportPdf(reportMonth);
-      const objectUrl = URL.createObjectURL(pdfBlob);
       const link = document.createElement("a");
-      link.href = objectUrl;
-      link.download = `monthly_collection_${reportMonth}.pdf`;
+      link.href = api.monthlyReportUrl(reportMonth);
+      link.download = `smart_ewaste_monthly_report_${reportMonth}.pdf`;
+      link.style.display = "none";
       document.body.appendChild(link);
       link.click();
       link.remove();
-      URL.revokeObjectURL(objectUrl);
-      setSuccess("Monthly PDF report downloaded.");
+      setSuccess("Monthly PDF report download started.");
     } catch (err) {
       setError(err.message);
+    } finally {
+      setExportingReport(false);
     }
   };
 
   return (
     <section className="role-panel role-admin">
-      <div className="panel-hero admin-hero card">
+      <div id="admin-reports" className="panel-hero admin-hero card admin-workspace-section">
         <div>
           <p className="panel-kicker">Operations Center</p>
           <h2>Admin Dashboard</h2>
@@ -121,8 +141,8 @@ export default function AdminDashboard({ requests, refresh }) {
             Report Month
             <input type="month" value={reportMonth} onChange={(e) => setReportMonth(e.target.value)} />
           </label>
-          <button type="button" onClick={exportMonthlyReport}>
-            Export Monthly PDF
+          <button type="button" onClick={exportMonthlyReport} disabled={exportingReport || !reportMonth}>
+            {exportingReport ? "Generating PDF..." : "Export Monthly PDF"}
           </button>
         </div>
       </div>
@@ -144,21 +164,31 @@ export default function AdminDashboard({ requests, refresh }) {
             <strong>{stats.completed_requests}</strong>
             <span>Completed</span>
           </div>
-          <div className="stat"><strong>{activeUsers}</strong><span>Active Users</span></div>
+          <div className="stat"><strong>{users.filter((systemUser) => systemUser.is_active).length}</strong><span>Active Users</span></div>
           <div className="stat"><strong>{cancelledCount}</strong><span>Cancelled</span></div>
           <div className="stat"><strong>{collectors.length}</strong><span>Active Collectors</span></div>
-          <div className="stat"><strong>4</strong><span>Collection Centers</span></div>
         </div>
       ) : null}
-      <div className="admin-analytics-grid">
+      <div id="admin-analytics" className="admin-analytics-grid admin-workspace-section">
         <article className="card mini-chart-card"><div className="section-head"><h3>Requests by Month</h3><p>Collection activity overview</p></div><div className="bar-chart" aria-label="Monthly requests chart">{[38,55,42,72,61,88,76,92].map((height,index)=><i key={index} style={{height:`${height}%`}} />)}</div><div className="chart-labels"><span>Jan</span><span>Mar</span><span>May</span><span>Jul</span></div></article>
         <article className="card status-chart-card"><div className="section-head"><h3>Request Status</h3><p>Current distribution</p></div><div className="donut-chart" style={{"--complete": `${requests.length ? Math.round((requests.filter((item)=>item.status==="completed").length/requests.length)*100) : 0}%`}}><span>{requests.length}<small>Total</small></span></div><div className="chart-legend"><span><i className="green-dot"/>Completed</span><span><i className="amber-dot"/>Pending</span><span><i className="blue-dot"/>Assigned</span></div></article>
       </div>
       {error ? <p className="error">{error}</p> : null}
       {success ? <p className="success">{success}</p> : null}
 
-      <div className="card table-shell">
-        <div className="quick-actions"><button type="button" onClick={() => setShowCollectorRegistration(true)}>＋ Add Collector</button><button type="button" onClick={exportMonthlyReport}>▥ Generate PDF Report</button><button type="button" onClick={() => window.print()}>↧ Export Data</button></div>
+      <div id="admin-collectors" className="card table-shell admin-workspace-section">
+        <div className="section-head"><h3>Collectors</h3><p>Collector accounts registered in the system.</p></div>
+        <div className="quick-actions collector-actions">
+          <button className="action-primary" type="button" onClick={() => setShowCollectorRegistration(true)}>
+            <span aria-hidden="true">+</span> Add Collector
+          </button>
+          <button className="action-secondary" type="button" onClick={exportMonthlyReport} disabled={exportingReport || !reportMonth}>
+            <span aria-hidden="true">▥</span> {exportingReport ? "Generating PDF..." : "Generate PDF Report"}
+          </button>
+          <button className="action-secondary" type="button" onClick={() => window.print()}>
+            <span aria-hidden="true">↓</span> Export Data
+          </button>
+        </div>
         {showCollectorRegistration ? (
           <form className="form-grid" onSubmit={registerCollector}>
             <label>
@@ -228,9 +258,21 @@ export default function AdminDashboard({ requests, refresh }) {
             <button type="submit">Register Collector</button>
           </form>
         ) : null}
+        <table>
+          <thead><tr><th>Name</th><th>Username</th><th>Email</th><th>Phone</th><th>Address</th><th>Status</th></tr></thead>
+          <tbody>{collectors.length ? collectors.map((collector) => <tr key={collector.id}><td>{`${collector.first_name || ""} ${collector.last_name || ""}`.trim() || "-"}</td><td>{collector.username}</td><td>{collector.email || "-"}</td><td>{collector.profile__phone || "-"}</td><td>{collector.profile__address || "-"}</td><td>{collector.is_active ? "Active" : "Inactive"}</td></tr>) : <tr><td colSpan={6}>No collectors registered.</td></tr>}</tbody>
+        </table>
       </div>
 
-      <div className="card table-shell">
+      <div id="admin-users" className="card table-shell admin-workspace-section">
+        <div className="section-head"><h3>System Users</h3><p>Standard user accounts registered in the system.</p></div>
+        <table>
+          <thead><tr><th>Name</th><th>Username</th><th>Email</th><th>Phone</th><th>Address</th><th>Joined</th><th>Status</th></tr></thead>
+          <tbody>{users.length ? users.map((systemUser) => <tr key={systemUser.id}><td>{`${systemUser.first_name || ""} ${systemUser.last_name || ""}`.trim() || "-"}</td><td>{systemUser.username}</td><td>{systemUser.email || "-"}</td><td>{systemUser.profile__phone || "-"}</td><td>{systemUser.profile__address || "-"}</td><td>{new Date(systemUser.date_joined).toLocaleDateString()}</td><td>{systemUser.is_active ? "Active" : "Inactive"}</td></tr>) : <tr><td colSpan={7}>No users registered.</td></tr>}</tbody>
+        </table>
+      </div>
+
+      <div id="admin-manage-requests" className="card table-shell admin-workspace-section">
         <div className="section-head">
           <h3>Manage Requests</h3>
           <p>Assign a collector and update statuses from one control table.</p>

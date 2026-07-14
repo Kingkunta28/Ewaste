@@ -72,6 +72,21 @@ class AuthAndRequestTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(response.json()), 1)
 
+    def test_admin_can_list_standard_users(self):
+        admin_user = User.objects.create_user(username="users-admin", password="StrongPass123!")
+        admin_user.profile.role = UserProfile.ROLE_ADMIN
+        admin_user.profile.save()
+        User.objects.create_user(username="visible-user", email="visible@example.com", password="StrongPass123!")
+
+        self.client.post(
+            "/api/auth/login/",
+            data=json.dumps({"username": "users-admin", "password": "StrongPass123!"}),
+            content_type="application/json",
+        )
+        response = self.client.get("/api/users/")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual([user["username"] for user in response.json()], ["visible-user"])
+
     def test_admin_can_register_collector(self):
         admin_user = User.objects.create_user(username="admin2", password="StrongPass123!")
         admin_profile = UserProfile.objects.get(user=admin_user)

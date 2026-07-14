@@ -1,9 +1,9 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { api } from "../api";
 import RequestTable from "../components/RequestTable";
 import { ewasteBrandOptionsByItem, ewasteConditionOptions, ewasteItemOptions, initialRequestForm } from "../constants";
 
-export default function UserDashboard({ requests, refresh }) {
+export default function UserDashboard({ requests, refresh, activeView = "dashboard" }) {
   const [form, setForm] = useState(initialRequestForm);
   const [customBrand, setCustomBrand] = useState("");
   const [error, setError] = useState("");
@@ -14,6 +14,19 @@ export default function UserDashboard({ requests, refresh }) {
   const completedCount = requests.filter((item) => item.status === "completed").length;
   const selectedBrandOptions = ewasteBrandOptionsByItem[form.item_type] || ["Other"];
   const showCustomBrandInput = form.brand === "Other";
+
+  useEffect(() => {
+    const sectionByView = {
+      "new-request": "new-pickup-request",
+      requests: "pickup-history"
+    };
+    const sectionId = sectionByView[activeView];
+    if (sectionId) {
+      requestAnimationFrame(() => document.getElementById(sectionId)?.scrollIntoView({ behavior: "smooth", block: "start" }));
+    } else if (activeView === "dashboard") {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  }, [activeView]);
 
   const onChange = (key, value) => {
     if (key === "item_type") {
@@ -91,7 +104,7 @@ export default function UserDashboard({ requests, refresh }) {
         <article className="card recycling-tip"><span className="tip-art">♻</span><span className="section-kicker">QUICK TIP</span><h3>Protect your data first</h3><p>Back up your files and sign out of all accounts before handing over a phone or computer.</p><a href="#tips">Explore recycling tips →</a></article>
       </div>
 
-      <form className="card user-form-card" onSubmit={submit}>
+      <form id="new-pickup-request" className="card user-form-card" onSubmit={submit}>
         <div className="section-head">
           <h3>Request E-Waste Pickup</h3>
           <p>Fill in accurate item and location details for faster assignment.</p>
@@ -160,7 +173,7 @@ export default function UserDashboard({ requests, refresh }) {
         </button>
       </form>
 
-      <div className="user-history">
+      <div id="pickup-history" className="user-history">
         <div className="section-head">
           <h3>Pickup History</h3>
           <p>Track all your submitted requests and their current processing status.</p>
