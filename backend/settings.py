@@ -55,7 +55,7 @@ if not SECRET_KEY:
 
 ALLOWED_HOSTS = _env_list(
     "DJANGO_ALLOWED_HOSTS",
-    "127.0.0.1,localhost,ewaste-backend-rjky.onrender.com",
+    "127.0.0.1,localhost,testserver,ewaste-backend-rjky.onrender.com",
 )
 
 # Application definition

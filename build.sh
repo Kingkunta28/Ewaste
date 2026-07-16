@@ -2,6 +2,7 @@
 set -o errexit
 
 pip install -r requirements.txt
+mkdir -p staticfiles
 python manage.py collectstatic --no-input
 
 # Neon recommends a direct connection for migrations. Runtime traffic can keep
